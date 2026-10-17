@@ -13,7 +13,11 @@ export function PushSettingsLink() {
   return (
     <Link
       href="/profile#notifications"
-      className={buttonVariants({ variant: "outline" })}
+      className={buttonVariants({
+        variant: "outline",
+        className:
+          "h-auto min-h-11 w-full rounded-2xl text-center whitespace-normal",
+      })}
     >
       Configurar notificações no perfil
     </Link>

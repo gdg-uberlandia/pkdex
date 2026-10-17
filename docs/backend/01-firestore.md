@@ -530,3 +530,8 @@ Use paginação em listas potencialmente grandes e selecione somente os dados ne
 As coleções `notices`, `noticeReaders` e `pushSubscriptions` são compartilhadas
 com o painel externo. Consulte [Avisos e Web Push](./08-notices.md) para contratos,
 isolamento por evento, leitura individual e configuração.
+
+Avisos excluídos administrativamente recebem `deletedAt` e `deletedBy`. Esses
+documentos permanecem para auditoria, mas não aparecem na listagem, nos detalhes
+ou no contador de não lidos. Leituras antigas são preservadas e desconsideradas
+para avisos removidos.

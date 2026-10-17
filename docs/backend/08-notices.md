@@ -35,8 +35,7 @@ coletivo considera somente perfis com `participant` no momento do envio.
 A API administrativa `GET/POST /api/v1/notices` exige `requireAdmin` no site.
 O POST valida novamente os campos, cria o aviso em transação e só então envia
 push com `web-push`. O UUID da publicação funciona como chave de idempotência:
-repetir a mesma publicação não inicia outro disparo. Publicações são definitivas;
-não há edição, exclusão, agendamento ou reenvio automático nesta versão.
+repetir a mesma publicação não inicia outro disparo. Não há edição, agendamento ou reenvio automático nesta versão; a exclusão administrativa é descrita abaixo.
 
 O envio é aguardado na requisição, em grupos de até 25, com timeout de socket de
 5 segundos por envio. Novos grupos deixam de começar após 40 segundos de envio;
@@ -64,7 +63,7 @@ Sem chaves VAPID, o histórico funciona e o painel permite publicar sem push
 quando `PUSH_ENABLED=true`. Com `PUSH_ENABLED=false`, a seção do painel fica
 indisponível. O GET autenticado `/api/notices/subscription` fornece
 somente a chave pública. POST/DELETE nessa rota exigem sessão e origem igual à
-da aplicação. `/api/notices/unread` usa contagens agregadas, sem baixar o corpo
+da aplicação. `/api/notices/unread` consulta somente IDs e marcadores de exclusão, sem baixar o corpo
 dos avisos. Mutações não aceitam identidade ou evento enviados pelo navegador.
 
 O Service Worker `/sw.js` trata apenas push e clique; não armazena páginas ou
@@ -118,3 +117,27 @@ verificação identifica push não ativo e existe chave pública disponível. O
 botão fica oculto durante a verificação, com push ativo e com push desativado
 globalmente ou sem chave. O status é verificado novamente ao retornar à janela,
 sem pedir permissão automaticamente.
+
+A seção de notificações do perfil inclui um tutorial de instalação pelo Chrome
+no iPhone enquanto o push não está ativo e há chave pública disponível. O texto
+explica que é necessário adicionar à Tela de Início e abrir pelo novo ícone
+antes de permitir notificações, com link para a ajuda oficial do Chrome.
+
+## Exclusão administrativa
+
+O painel permite excluir após confirmação. `DELETE /api/v1/notices/{id}` recebe
+somente o UUID na URL, sem corpo, exige administrador e `PUSH_ENABLED=true`, valida UUID e
+confere o evento dentro da transação. O servidor grava `deletedAt` e `deletedBy`
+no aviso; repetir a exclusão preserva a auditoria original. O registro é mantido
+para auditoria e idempotência, sujeito ao mesmo prazo de retenção do evento.
+
+Site e Pokedex ocultam documentos com `deletedAt` preenchido, incluindo avisos
+legados que não possuem esse campo. A abertura de um aviso removido informa que
+ele não está disponível e oferece retorno à lista. Novas leituras são bloqueadas.
+O contador usa a interseção dos IDs visíveis com as leituras do participante,
+para não descontar leituras de avisos já excluídos. Nenhum novo índice é exigido.
+
+Push já aceito não pode ser recolhido, e envios em andamento podem terminar.
+A exclusão não dispara push nem modifica as inscrições. As duas aplicações
+precisam desta atualização para respeitar a remoção; telas já abertas devem ser
+recarregadas para obter o novo estado.

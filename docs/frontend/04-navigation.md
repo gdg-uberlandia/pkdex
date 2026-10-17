@@ -121,3 +121,9 @@ O destino `/profile#notifications` rola explicitamente o contêiner interno
 `#main-content` até a seção, após a verificação do push e a montagem do conteúdo.
 Isso funciona tanto ao navegar de Avisos quanto ao abrir ou recarregar o link
 direto, sem depender da rolagem do documento externo ao AppShell.
+
+A listagem de Avisos usa cards com ícones e destaque para mensagens não lidas,
+seguindo as superfícies arredondadas e o degradê das outras coleções. A data
+aparece em formato compacto `dd/mm · hh:mm`, no horário de São Paulo, com a
+data completa disponível na descrição acessível. O detalhe mantém a mesma
+identidade visual e exibe a ação de conteúdo em largura completa.

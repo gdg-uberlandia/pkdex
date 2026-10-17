@@ -53,6 +53,46 @@ export function PushPreferences() {
       <p role="status" className="text-sm text-muted-foreground">
         {push.message}
       </p>
+      {push.publicKey && push.status !== "active" && (
+        <aside
+          className="space-y-3 rounded-xl bg-muted p-4"
+          aria-labelledby="iphone-push-help-title"
+        >
+          <h3 id="iphone-push-help-title" className="text-sm font-semibold">
+            Usa iPhone? Adicione à Tela de Início
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            No iPhone, é necessário adicionar a Pokedex à Tela de Início e abrir
+            pelo ícone para permitir as notificações. Faça isso pelo Chrome:
+          </p>
+          <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
+            <li>Abra a Pokedex no Chrome do iPhone.</li>
+            <li>
+              Use <strong>Compartilhar</strong>, junto à barra de endereço
+              (quadrado com seta para cima).
+            </li>
+            <li>
+              Escolha <strong>Adicionar à Tela de Início</strong> e confirme em{" "}
+              <strong>Adicionar</strong>. Se aparecer{" "}
+              <strong>Abrir como App da Web</strong>, mantenha ativado.
+            </li>
+            <li>Volte à Tela de Início e abra pelo novo ícone da Pokedex.</li>
+            <li>
+              Entre na sua conta, vá a <strong>Perfil → Notificações</strong> e
+              toque em <strong>Ativar notificações</strong>. Confirme{" "}
+              <strong>Permitir</strong> quando o iPhone perguntar.
+            </li>
+          </ol>
+          <a
+            href="https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DiOS&hl=pt-BR"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block text-sm font-medium text-primary underline underline-offset-4"
+          >
+            Ver orientação do Chrome
+          </a>
+        </aside>
+      )}
       {(push.canEnable || push.status === "active") && (
         <Button
           className="w-full"

@@ -42,6 +42,7 @@ export async function listNotices(eventId: string, userId: string) {
   ])
   const readIds = new Set(reads.docs.map((doc) => doc.id))
   return snapshot.docs
+    .filter((doc) => doc.data().deletedAt == null)
     .map((doc) => ({
       ...parseNotice(doc.id, doc.data()),
       read: readIds.has(doc.id),
@@ -53,7 +54,12 @@ export async function listNotices(eventId: string, userId: string) {
 }
 export async function findNotice(eventId: string, id: string) {
   const snapshot = await notices().doc(id).get()
-  if (!snapshot.exists || snapshot.data()?.eventId !== eventId) return null
+  if (
+    !snapshot.exists ||
+    snapshot.data()?.eventId !== eventId ||
+    snapshot.data()?.deletedAt != null
+  )
+    return null
   return parseNotice(snapshot.id, snapshot.data()!)
 }
 export async function markNoticeRead(
@@ -64,7 +70,11 @@ export async function markNoticeRead(
   await firestore.runTransaction(async (transaction) => {
     const reference = notices().doc(id)
     const snapshot = await transaction.get(reference)
-    if (!snapshot.exists || snapshot.data()?.eventId !== eventId)
+    if (
+      !snapshot.exists ||
+      snapshot.data()?.eventId !== eventId ||
+      snapshot.data()?.deletedAt != null
+    )
       throw new Error("Aviso não encontrado")
     const read = readRef(eventId, userId).doc(id)
     const existing = await transaction.get(read)
@@ -98,9 +108,12 @@ export async function removeSubscription(
 }
 
 export async function countUnreadNotices(eventId: string, userId: string) {
-  const [total, read] = await Promise.all([
-    notices().where("eventId", "==", eventId).count().get(),
-    readRef(eventId, userId).count().get(),
+  const [snapshot, reads] = await Promise.all([
+    notices().where("eventId", "==", eventId).select("deletedAt").get(),
+    readRef(eventId, userId).select().get(),
   ])
-  return Math.max(0, total.data().count - read.data().count)
+  const readIds = new Set(reads.docs.map((doc) => doc.id))
+  return snapshot.docs.filter(
+    (doc) => doc.data().deletedAt == null && !readIds.has(doc.id)
+  ).length
 }
