@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => {
-  const notice = { kind: "notice" }
+  const find = vi.fn()
+  const list = vi.fn()
+  const reads = vi.fn()
+  const notice = { kind: "notice", get: find }
   const read = { kind: "read" }
   const device = { kind: "device" }
   const get = vi.fn()
@@ -9,17 +12,36 @@ const mocks = vi.hoisted(() => {
   const remove = vi.fn()
   const set = vi.fn()
   const transaction = { get, create, delete: remove }
-  return { notice, read, device, get, create, remove, set, transaction }
+  return {
+    notice,
+    read,
+    device,
+    get,
+    create,
+    remove,
+    set,
+    transaction,
+    find,
+    list,
+    reads,
+  }
 })
 vi.mock("@/lib/firebase/admin", () => ({
   firestore: {
     collection: (name: string) => ({
+      where: () => ({ get: mocks.list, select: () => ({ get: mocks.list }) }),
       doc: () =>
         name.endsWith("notices")
           ? mocks.notice
           : name.endsWith("pushSubscriptions")
             ? { ...mocks.device, set: mocks.set }
-            : { collection: () => ({ doc: () => mocks.read }) },
+            : {
+                collection: () => ({
+                  doc: () => mocks.read,
+                  get: mocks.reads,
+                  select: () => ({ get: mocks.reads }),
+                }),
+              },
     }),
     runTransaction: (
       callback: (transaction: typeof mocks.transaction) => Promise<unknown>
@@ -27,6 +49,9 @@ vi.mock("@/lib/firebase/admin", () => ({
   },
 }))
 import {
+  countUnreadNotices,
+  findNotice,
+  listNotices,
   markNoticeRead,
   removeSubscription,
   saveSubscription,
@@ -38,6 +63,55 @@ const subscription = {
 }
 beforeEach(() => vi.clearAllMocks())
 describe("notice privacy and integrity", () => {
+  it("lists legacy visible notices but never a removed notice", async () => {
+    const data = {
+      title: "Aviso",
+      body: "Mensagem",
+      link: "",
+      sendPush: false,
+      eventId: "current",
+      createdAt: "2026-10-17T12:00:00.000Z",
+    }
+    const id = "123e4567-e89b-42d3-a456-426614174000"
+    mocks.list.mockResolvedValueOnce({
+      docs: [
+        { id, data: () => data },
+        { id: "deleted", data: () => ({ ...data, deletedAt: new Date() }) },
+      ],
+    })
+    mocks.reads.mockResolvedValueOnce({ docs: [] })
+    expect(
+      (await listNotices("current", "me")).map((notice) => notice.id)
+    ).toEqual([id])
+  })
+  it("does not expose a removed notice through its direct URL", async () => {
+    mocks.find.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ eventId: "current", deletedAt: new Date() }),
+    })
+    expect(await findNotice("current", "notice")).toBeNull()
+  })
+  it("does not record new reads for removed notices", async () => {
+    mocks.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ eventId: "current", deletedAt: new Date() }),
+    })
+    await expect(markNoticeRead("current", "me", "notice")).rejects.toThrow()
+    expect(mocks.create).not.toHaveBeenCalled()
+  })
+  it("ignores reads of removed notices without hiding a new unread notice", async () => {
+    mocks.list.mockResolvedValueOnce({
+      docs: [
+        { id: "deleted", data: () => ({ deletedAt: new Date() }) },
+        { id: "read", data: () => ({}) },
+        { id: "unread", data: () => ({ deletedAt: null }) },
+      ],
+    })
+    mocks.reads.mockResolvedValueOnce({
+      docs: [{ id: "deleted" }, { id: "read" }],
+    })
+    expect(await countUnreadNotices("current", "me")).toBe(1)
+  })
   it("rejects marking a notice from another event as read", async () => {
     mocks.get.mockResolvedValueOnce({
       exists: true,
