@@ -110,3 +110,14 @@ O documento usa `viewport-fit=cover` para que navegadores móveis exponham corre
 O sino na home e nos cabeçalhos abre `/notices`, com contador de não lidos.
 `/notices/{noticeId}` apresenta o conteúdo completo e marca a leitura depois de
 abrir a tela. O botão de voltar leva ao histórico; o histórico volta à home.
+
+Após concluir o onboarding, `/notifications/enable` oferece um convite em tela
+cheia para ativar push, com opção Agora não. O convite respeita `PUSH_ENABLED`
+e substitui sua entrada por `/home` ao terminar. O ajuste permanente fica em
+`/profile#notifications`; em Avisos, o botão para esse ajuste aparece somente
+quando push não está ativo no dispositivo e há configuração disponível.
+
+O destino `/profile#notifications` rola explicitamente o contêiner interno
+`#main-content` até a seção, após a verificação do push e a montagem do conteúdo.
+Isso funciona tanto ao navegar de Avisos quanto ao abrir ou recarregar o link
+direto, sem depender da rolagem do documento externo ao AppShell.

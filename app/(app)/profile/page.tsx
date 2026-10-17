@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { requireAuth } from "@/lib/require-auth"
 import { cn } from "@/lib/utils"
 import { signOutCurrentUser } from "@/modules/auth/auth.actions"
+import { PushPreferences } from "@/modules/notices/push-preferences"
 import { getLinkedinProfileUrl } from "@/modules/profile/profile.schema"
 import { requireProfileForSession } from "@/modules/profile/profile.service"
 import { ProfileHelp } from "@/modules/profile/profile-help"
@@ -173,6 +174,7 @@ export default async function ProfilePage() {
           <ThemeSelector />
         </CardContent>
       </Card>
+      <PushPreferences />
       <ProfileHelp />
 
       <form action={signOutCurrentUser}>

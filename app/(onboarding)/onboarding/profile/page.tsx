@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { AppHeader } from "@/components/layout/app-header"
 import { requireAuth } from "@/lib/require-auth"
 import { signOutCurrentUser } from "@/modules/auth/auth.actions"
+import { getPostOnboardingDestination } from "@/modules/notices/push-config"
 import { completeProfileOnboardingAction } from "@/modules/profile/profile.actions"
 import { requireProfileForSession } from "@/modules/profile/profile.service"
 import { ProfileForm } from "@/modules/profile/profile-form"
@@ -41,7 +42,7 @@ export default async function OnboardingProfilePage() {
             interests: [...(profile.interests ?? [])],
           }}
           submitAction={completeProfileOnboardingAction}
-          successRedirect="/home"
+          successRedirect={getPostOnboardingDestination()}
           cancelAction={signOutCurrentUser}
         />
       </div>

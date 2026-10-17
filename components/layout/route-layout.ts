@@ -10,6 +10,11 @@ type RouteLayout = {
 }
 
 const routeLayouts: Record<string, RouteLayout> = {
+  "/notifications/enable": {
+    title: "Permitir notificações",
+    showHeader: false,
+    showNavigation: false,
+  },
   "/notices": {
     title: "Avisos",
     showHeader: true,
