@@ -4,6 +4,7 @@ import { usePathname, useSearchParams } from "next/navigation"
 import type { ReactNode } from "react"
 
 import { Toaster } from "@/components/ui/sonner"
+import { NoticeBell } from "@/modules/notices/notice-bell"
 import type { AccessRole } from "@/modules/profile/profile.schema"
 
 import { AppHeader } from "./app-header"
@@ -31,6 +32,7 @@ export function AuthenticatedAppShell({
           routeLayout.showHeader ? (
             <AppHeader
               title={routeLayout.title}
+              actions={<NoticeBell />}
               showBack={Boolean(routeLayout.backHref)}
               backHref={routeLayout.backHref}
             />

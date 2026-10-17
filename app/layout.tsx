@@ -15,6 +15,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://pokedex.devfesttriangulo.com.br"),
+  appleWebApp: { capable: true, title: "Pokedex", statusBarStyle: "default" },
+  icons: { apple: "/icons/pwa-192.png" },
   applicationName: "DevFest Triângulo Pokedex",
   title: {
     default: "DevFest Triângulo Pokedex",

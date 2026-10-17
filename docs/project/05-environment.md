@@ -138,3 +138,23 @@ Desenvolvimento, staging e produção devem usar projetos ou configurações iso
 ## Próximo documento
 
 ➡️ [Roadmap](./06-roadmap.md)
+
+## Web Push opcional
+
+`VAPID_PUBLIC_KEY` deve corresponder à chave pública configurada no painel do
+site. A chave privada fica exclusivamente no site. Sem essa variável, Avisos
+continua disponível sem inscrição push. Veja [configuração completa](../backend/08-notices.md).
+
+## Controle global do push
+
+Configure `PUSH_ENABLED=true` nos dois projetos para habilitar push. Use
+`PUSH_ENABLED=false` para desabilitar, preservando as chaves e inscrições. A
+ausência da variável também desabilita; somente `true` (ignorando maiúsculas e
+espaços) habilita. Reinicie os serviços ou faça novo deploy após alterar.
+
+No site, a variável oculta Avisos do menu e da busca e bloqueia a tela e a API
+com resposta 404, inclusive para publicação sem push. Na Pokedex, ela oculta a ativação e bloqueia novas inscrições,
+inclusive chamadas diretas à API. A remoção de inscrições permanece permitida.
+Na Pokedex, histórico, leitura e contador continuam funcionando. Ao
+reativar, inscrições existentes podem voltar a receber push. Notificações já
+aceitas pelo provedor antes da desativação ainda podem ser entregues.

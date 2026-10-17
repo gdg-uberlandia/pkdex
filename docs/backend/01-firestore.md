@@ -524,3 +524,9 @@ Use paginação em listas potencialmente grandes e selecione somente os dados ne
 ## Próximo documento
 
 ➡️ [Autenticação](./02-authentication.md)
+
+## Avisos
+
+As coleções `notices`, `noticeReaders` e `pushSubscriptions` são compartilhadas
+com o painel externo. Consulte [Avisos e Web Push](./08-notices.md) para contratos,
+isolamento por evento, leitura individual e configuração.

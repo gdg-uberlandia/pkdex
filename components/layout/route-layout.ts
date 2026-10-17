@@ -10,6 +10,12 @@ type RouteLayout = {
 }
 
 const routeLayouts: Record<string, RouteLayout> = {
+  "/notices": {
+    title: "Avisos",
+    showHeader: true,
+    showNavigation: false,
+    backHref: "/home",
+  },
   "/home": {
     title: "Início",
     showNavigation: true,
@@ -111,6 +117,14 @@ export function getRouteLayout(
 ): RouteLayout {
   const routeLayout =
     routeLayouts[pathname] ??
+    (pathname.startsWith("/notices/")
+      ? {
+          title: "Aviso",
+          showHeader: true,
+          showNavigation: false,
+          backHref: "/notices",
+        }
+      : undefined) ??
     (pathname === "/operations/scan"
       ? {
           title: "Atender participante",
