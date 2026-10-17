@@ -1,9 +1,11 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 import { ZodError } from "zod"
 
 import { requireAuth } from "@/lib/require-auth"
+import { getPostOnboardingDestination } from "@/modules/notices/push-config"
 
 import type { ProfileUpdateInput } from "./profile.schema"
 import {
@@ -89,10 +91,6 @@ export async function completeProfileOnboardingAction(
     await completeProfileForSession(session, input)
     revalidatePath("/home")
     revalidatePath("/profile")
-
-    return {
-      success: true,
-    }
   } catch (error) {
     if (error instanceof ZodError) {
       return {
@@ -109,4 +107,6 @@ export async function completeProfileOnboardingAction(
       message: "Não foi possível concluir seu perfil. Tente novamente.",
     }
   }
+
+  redirect(getPostOnboardingDestination())
 }

@@ -20,7 +20,7 @@ no site. Os projetos precisam apontar para o mesmo Firebase e evento.
 - `pushSubscriptions/{sha256(eventId:endpoint)}`: `eventId`, `userId`, `endpoint`,
   `keys.p256dh`, `keys.auth`, `updatedAt`. Há uma inscrição por navegador e
   evento; vários dispositivos podem pertencer ao mesmo perfil. Reativar ou
-  visitar Avisos sincroniza uma inscrição existente com a sessão atual.
+  visitar o perfil ou os avisos sincroniza uma inscrição existente com a sessão atual.
 
 Não há acesso direto pelo Firebase Client SDK. As regras atuais do projeto de
 infraestrutura (`site-devfest/firestore.rules`) já negam acesso a essas coleções.
@@ -58,7 +58,7 @@ nova publicação. Envio aceito pelo provedor não comprova entrega nem leitura.
    exemplo, `mailto:contato@devfesttriangulo.com.br`) no servidor do site.
 3. Configure a mesma `VAPID_PUBLIC_KEY` no servidor da Pokedex. A chave privada
    não pertence à Pokedex nem ao cliente.
-4. Reinicie os serviços. Na Pokedex, abra Avisos e clique em Ativar notificações.
+4. Reinicie os serviços. Na Pokedex, abra Perfil → Notificações e clique em Ativar notificações.
 
 Sem chaves VAPID, o histórico funciona e o painel permite publicar sem push
 quando `PUSH_ENABLED=true`. Com `PUSH_ENABLED=false`, a seção do painel fica
@@ -99,3 +99,22 @@ inclusive chamadas diretas à API. A remoção de inscrições permanece permiti
 Na Pokedex, histórico, leitura e contador continuam funcionando. Ao
 reativar, inscrições existentes podem voltar a receber push. Notificações já
 aceitas pelo provedor antes da desativação ainda podem ser entregues.
+
+## Convite após onboarding e preferências
+
+Depois de concluir o perfil, a Server Action redireciona para
+`/notifications/enable` quando push está habilitado e há chave pública. A tela
+ocupa toda a área da aplicação, sem cabeçalho ou navegação inferior, e oferece
+Permitir notificações e Agora não. O navegador só recebe a solicitação de
+permissão após o clique. Ao ativar com sucesso ou pular, a navegação usa replace
+para `/home`. Dispositivos já inscritos ou sem suporte seguem para a home;
+permissão bloqueada é explicada sem tentar solicitar novamente automaticamente.
+O convite não é exibido nos próximos logins.
+
+O controle por dispositivo fica em `/profile#notifications`, onde é possível
+ativar e desativar push. A lista de Avisos não possui mais controles de
+permissão: mostra apenas o botão Configurar notificações no perfil quando a
+verificação identifica push não ativo e existe chave pública disponível. O
+botão fica oculto durante a verificação, com push ativo e com push desativado
+globalmente ou sem chave. O status é verificado novamente ao retornar à janela,
+sem pedir permissão automaticamente.

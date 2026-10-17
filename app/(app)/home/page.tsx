@@ -127,16 +127,6 @@ export default async function HomePage() {
     <div className="space-y-7 px-6 py-6">
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-sm text-muted-foreground">
-              Boas-vindas ao DevFest
-            </p>
-            <h1 className="truncate text-2xl font-bold">
-              Olá, {getFirstName(profile.displayName)}!
-            </h1>
-          </div>
-
-          <NoticeBell />
           <Link
             href="/profile"
             className="shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
@@ -154,6 +144,13 @@ export default async function HomePage() {
               </AvatarFallback>
             </Avatar>
           </Link>
+          <div className="min-w-0">
+            <h1 className="truncate text-2xl font-bold">
+              Olá, {getFirstName(profile.displayName)}!
+            </h1>
+          </div>
+
+          <NoticeBell />
         </div>
 
         <div className="space-y-2">

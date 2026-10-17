@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { requireAuth } from "@/lib/require-auth"
 import { getNoticesForSession } from "@/modules/notices/notice.service"
-import { PushPreferences } from "@/modules/notices/push-preferences"
+import { PushSettingsLink } from "@/modules/notices/push-settings-link"
 
 export const metadata = { title: "Avisos" }
 export default async function NoticesPage() {
@@ -14,7 +14,7 @@ export default async function NoticesPage() {
         Todos os avisos do evento ficam aqui, mesmo depois de dispensar a
         notificação.
       </p>
-      <PushPreferences />
+      <PushSettingsLink />
       {!notices.length ? (
         <p className="rounded-2xl border p-6 text-center text-muted-foreground">
           Nenhum aviso publicado ainda.

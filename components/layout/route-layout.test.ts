@@ -3,6 +3,13 @@ import { describe, expect, it } from "vitest"
 import { getRouteLayout } from "./route-layout"
 
 describe("return destinations", () => {
+  it("shows the notification invitation as a full screen step", () => {
+    const layout = getRouteLayout("/notifications/enable", null, [
+      "participant",
+    ])
+    expect(layout.showHeader).toBe(false)
+    expect(layout.showNavigation).toBe(false)
+  })
   it.each([
     "/tags",
     "/missions",
