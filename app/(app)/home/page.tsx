@@ -34,6 +34,7 @@ import {
   type HomeObjective,
   selectHomeObjective,
 } from "@/modules/home/home-progress"
+import { NoticeBell } from "@/modules/notices/notice-bell"
 import { findOrInitializeParticipantSummary } from "@/modules/participant-summary/participant-summary.repository"
 import { ParticipantSummaryCard } from "@/modules/participant-summary/participant-summary-card"
 import { hasPermission } from "@/modules/profile/profile.authorization"
@@ -135,6 +136,7 @@ export default async function HomePage() {
             </h1>
           </div>
 
+          <NoticeBell />
           <Link
             href="/profile"
             className="shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
@@ -329,6 +331,7 @@ function OrganizationHome({
           </h1>
         </div>
 
+        <NoticeBell />
         <Link
           href="/profile"
           className="shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"

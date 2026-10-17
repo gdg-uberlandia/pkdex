@@ -104,3 +104,9 @@ O documento usa `viewport-fit=cover` para que navegadores móveis exponham corre
 ## Próximo documento
 
 ➡️ [Firestore](../backend/01-firestore.md)
+
+## Avisos
+
+O sino na home e nos cabeçalhos abre `/notices`, com contador de não lidos.
+`/notices/{noticeId}` apresenta o conteúdo completo e marca a leitura depois de
+abrir a tela. O botão de voltar leva ao histórico; o histórico volta à home.
