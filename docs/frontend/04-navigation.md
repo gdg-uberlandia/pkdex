@@ -127,3 +127,7 @@ seguindo as superfícies arredondadas e o degradê das outras coleções. A data
 aparece em formato compacto `dd/mm · hh:mm`, no horário de São Paulo, com a
 data completa disponível na descrição acessível. O detalhe mantém a mesma
 identidade visual e exibe a ação de conteúdo em largura completa.
+
+A tela inicial oferece um ícone de calendário com rótulo acessível
+“Ver programação”, ao lado das notificações, para abrir `/schedule`.
+A programação usa header com retorno para `/home` e não exibe navegação inferior.

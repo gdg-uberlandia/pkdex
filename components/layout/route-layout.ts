@@ -54,6 +54,12 @@ const routeLayouts: Record<string, RouteLayout> = {
     showNavigation: false,
     backHref: "/home",
   },
+  "/schedule": {
+    title: "Programação",
+    showHeader: true,
+    showNavigation: false,
+    backHref: "/home",
+  },
   "/talks": {
     title: "Palestras",
     showHeader: true,

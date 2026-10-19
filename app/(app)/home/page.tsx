@@ -1,5 +1,6 @@
 import {
   Building2,
+  CalendarDays,
   ChevronRight,
   ClipboardCheck,
   ClipboardList,
@@ -150,7 +151,17 @@ export default async function HomePage() {
             </h1>
           </div>
 
-          <NoticeBell />
+          <div className="flex shrink-0 items-center gap-1">
+            <Link
+              href="/schedule"
+              aria-label="Ver programação"
+              title="Programação"
+              className="inline-flex size-11 items-center justify-center rounded-full transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              <CalendarDays className="size-5" aria-hidden="true" />
+            </Link>
+            <NoticeBell />
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -328,7 +339,17 @@ function OrganizationHome({
           </h1>
         </div>
 
-        <NoticeBell />
+        <div className="flex shrink-0 items-center gap-1">
+          <Link
+            href="/schedule"
+            aria-label="Ver programação"
+            title="Programação"
+            className="inline-flex size-11 items-center justify-center rounded-full transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <CalendarDays className="size-5" aria-hidden="true" />
+          </Link>
+          <NoticeBell />
+        </div>
         <Link
           href="/profile"
           className="shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
