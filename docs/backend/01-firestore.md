@@ -61,7 +61,7 @@ onboarding; o painel cria administradores com onboarding concluído. Apenas
 `participant` participa das atividades e recebe XP; `reviewer` e `admin` podem
 validar missões presenciais.
 
-No setup obrigatório, a mesma transação persiste os campos validados e define `onboardingCompleted: true`. Cancelar o setup não altera o documento; voltar apenas reinicia as etapas introdutórias.
+No setup obrigatório, a mesma transação persiste os campos validados e define `onboardingCompleted: true`. A primeira conclusão de um participante concede 75 XP e atualiza `xpReachedAt`; repetições e perfis sem o papel `participant` não recebem XP. Perfis que já concluíram o onboarding não recebem crédito retroativo. Cancelar o setup não altera o documento; voltar apenas reinicia as etapas introdutórias.
 
 Os campos `xp` e `xpReachedAt` armazenam a pontuação atual e o instante em que
 ela foi atingida. Os valores concedidos por cada interação ficam centralizados

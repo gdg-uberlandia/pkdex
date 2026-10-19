@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto"
 import { Timestamp } from "firebase-admin/firestore"
 import * as z from "zod"
 
+import { SCORES } from "@/config/scores"
 import { firestore } from "@/lib/firebase/admin"
 import { getFirestoreCollectionName } from "@/lib/firebase/firestore-collection"
 import { createInitialParticipantSummary } from "@/modules/participant-summary/participant-summary.repository"
@@ -234,11 +235,22 @@ export async function completeProfileByUserId(
       throw new Error("Profile not found")
     }
 
+    const profile = profileDocumentSchema
+      .pick({ onboardingCompleted: true, accessRoles: true, xp: true })
+      .parse(snapshot.data())
+    const now = Timestamp.now()
+    const grantXp =
+      !profile.onboardingCompleted &&
+      profile.accessRoles.includes("participant")
+
     transaction.update(profileRef, {
       ...validatedInput,
       skills: [],
       onboardingCompleted: true,
-      updatedAt: Timestamp.now(),
+      ...(grantXp
+        ? { xp: profile.xp + SCORES.PROFILE_COMPLETION, xpReachedAt: now }
+        : {}),
+      updatedAt: now,
     })
   })
 }
