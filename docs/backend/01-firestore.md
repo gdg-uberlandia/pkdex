@@ -61,7 +61,7 @@ onboarding; o painel cria administradores com onboarding concluído. Apenas
 `participant` participa das atividades e recebe XP; `reviewer` e `admin` podem
 validar missões presenciais.
 
-No setup obrigatório, a mesma transação persiste os campos validados e define `onboardingCompleted: true`. Cancelar o setup não altera o documento; voltar apenas reinicia as etapas introdutórias.
+No setup obrigatório, a mesma transação persiste os campos validados e define `onboardingCompleted: true`. A primeira conclusão de um participante concede 75 XP e atualiza `xpReachedAt`; repetições e perfis sem o papel `participant` não recebem XP. Perfis que já concluíram o onboarding não recebem crédito retroativo. Cancelar o setup não altera o documento; voltar apenas reinicia as etapas introdutórias.
 
 Os campos `xp` e `xpReachedAt` armazenam a pontuação atual e o instante em que
 ela foi atingida. Os valores concedidos por cada interação ficam centralizados
@@ -214,7 +214,8 @@ Ele usa o mesmo contrato mantido pelo painel administrativo externo:
 `startAt`, `endAt`, `track`, `order`, `activity`, `active`, `createdAt` e
 `updatedAt`; todas as datas são `Timestamp`.
 
-As trilhas válidas são `MINAS`, `CURADO`, `CANASTRA`, `TRANCA` e `COMUNIDADE`.
+As trilhas válidas são `MINAS`, `CURADO`, `CANASTRA`, `TRANCA`, `COMUNIDADE` (Arena Comunidade 1),
+`COMUNIDADE_2` (Arena Comunidade 2) e `LOUNGE_SENIOR` (Lounge Senior).
 Uma atividade de `type: "talk"` possui `talkId` e exige uma trilha. Atividades
 de `type: "opening_keynote"` e `closing_keynote` também possuem `talkId`, usam
 `track: null` e `order: null`, e exigem uma palestra de `format: "keynote"`.
@@ -535,3 +536,9 @@ Avisos excluídos administrativamente recebem `deletedAt` e `deletedBy`. Esses
 documentos permanecem para auditoria, mas não aparecem na listagem, nos detalhes
 ou no contador de não lidos. Leituras antigas são preservadas e desconsideradas
 para avisos removidos.
+
+A programação informativa `/schedule` também consulta
+`schedule_publications/{eventId}`, mantido pelo painel externo. Somente quando
+`published` é `true` ela carrega as atividades ativas. A ausência do documento
+significa programação ainda não publicada. Essa leitura ocorre exclusivamente
+no servidor, com o evento obtido do perfil autenticado, e não consulta avaliações.

@@ -21,6 +21,7 @@ O objetivo é centralizar as decisões, padrões, fluxos e requisitos necessári
 - [Scripts de reset e seed do Firestore](./project/08-database-maintenance-scripts.md)
 
 - [Validação de desempenho](./project/09-performance-validation.md)
+- [Planejamento de brindes e tickets](./project/10-reward-planning.md)
 
 ## Frontend
 

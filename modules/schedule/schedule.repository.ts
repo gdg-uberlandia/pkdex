@@ -61,3 +61,18 @@ async function loadActiveSchedule(eventId: string): Promise<ScheduleEntry[]> {
 export function findActiveSchedule(eventId: string) {
   return loadActiveSchedule(eventId)
 }
+
+export async function isSchedulePublished(eventId: string): Promise<boolean> {
+  const validatedEventId = eventIdSchema.parse(eventId)
+  const snapshot = await firestore
+    .collection(getFirestoreCollectionName("schedule_publications"))
+    .doc(validatedEventId)
+    .get()
+  if (!snapshot.exists) return false
+  const publication = z
+    .object({ eventId: eventIdSchema, published: z.boolean() })
+    .parse(snapshot.data())
+  if (publication.eventId !== validatedEventId)
+    throw new Error("Schedule publication event mismatch")
+  return publication.published
+}

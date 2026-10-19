@@ -133,7 +133,8 @@ console.log(
           ])
         ),
         raffles: 6,
-        rewards: 6,
+        rewards: documents.filter((item) => item.collection === "rewards")
+          .length,
         tags: 22,
         talks: 24,
         schedule: scheduleDocuments.length,

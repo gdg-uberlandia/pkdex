@@ -19,6 +19,7 @@ describe("return destinations", () => {
     "/companies",
     "/connections",
     "/talks",
+    "/schedule",
   ])("returns %s to Home regardless of scan history", (pathname) => {
     expect(getRouteLayout(pathname, null, ["participant"]).backHref).toBe(
       "/home"

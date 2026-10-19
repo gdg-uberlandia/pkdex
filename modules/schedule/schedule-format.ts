@@ -1,14 +1,17 @@
 import type { ScheduleEntry, ScheduleTrack } from "./schedule.schema"
 
-const TRACK_LABELS: Record<ScheduleTrack, string> = {
+export const TRACK_LABELS: Record<ScheduleTrack, string> = {
   MINAS: "Minas",
   CURADO: "Curado",
   CANASTRA: "Canastra",
   TRANCA: "Trança",
-  COMUNIDADE: "Comunidade",
+  COMUNIDADE: "Arena Comunidade 1",
+  COMUNIDADE_2: "Arena Comunidade 2",
+  LOUNGE_SENIOR: "Lounge Sênior",
 }
 
-const ACTIVITY_LABELS = {
+export const ACTIVITY_LABELS = {
+  break: "Intervalo",
   talk: "Palestra",
   opening: "Abertura",
   opening_keynote: "Keynote de abertura",

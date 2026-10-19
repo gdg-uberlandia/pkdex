@@ -6,6 +6,8 @@ export const scheduleTrackSchema = z.enum([
   "CANASTRA",
   "TRANCA",
   "COMUNIDADE",
+  "COMUNIDADE_2",
+  "LOUNGE_SENIOR",
 ])
 
 export const scheduleActivitySchema = z.discriminatedUnion("type", [
@@ -30,7 +32,7 @@ export const scheduleFieldsSchema = z
     startAt: z.date(),
     endAt: z.date(),
     track: scheduleTrackSchema.nullable(),
-    order: z.number().int().min(0).max(4).nullable(),
+    order: z.number().int().min(0).max(6).nullable(),
     activity: scheduleActivitySchema,
     active: z.boolean(),
     createdAt: z.date(),

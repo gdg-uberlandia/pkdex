@@ -280,3 +280,14 @@ seguido por duas colunas de recompensa e confirmação. O visual acompanha os
 modais das coleções, independentemente do tema do dispositivo. Leituras repetidas
 mostram o XP já recebido, sem nova celebração. Os botões preservam `replace`.
 Carregamento e erros continuam usando `QrResult`.
+
+## Programação informativa
+
+`/schedule` apresenta a programação publicada do evento do perfil autenticado,
+incluindo abertura, keynotes, intervalos e encerramento. A página agrupa por
+faixa de horário, ordena as sete trilhas na ordem oficial e usa suas cores em
+cards empilhados no celular e duas colunas a partir de telas maiores. As
+atividades gerais ocupam toda a largura. Títulos, descrições e palestrantes são
+resolvidos no servidor; não há controles de avaliação nesta página.
+`/talks` mantém a experiência de avaliações.
+A rota inclui estados de carregamento, erro e programação ainda não publicada.
