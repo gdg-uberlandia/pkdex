@@ -14,6 +14,7 @@ const subscription = {
 }
 const manager = { getSubscription: vi.fn(), subscribe: vi.fn() }
 const register = vi.fn()
+const getRegistration = vi.fn()
 const requestPermission = vi.fn()
 const fetchMock = vi.fn()
 beforeEach(() => {
@@ -26,11 +27,13 @@ beforeEach(() => {
   vi.stubGlobal("navigator", {
     serviceWorker: {
       register,
+      getRegistration,
       ready: Promise.resolve({ pushManager: manager }),
     },
   })
   vi.stubGlobal("fetch", fetchMock)
   register.mockResolvedValue({ pushManager: manager })
+  getRegistration.mockResolvedValue({ pushManager: manager })
   manager.getSubscription.mockResolvedValue(null)
   manager.subscribe.mockResolvedValue(subscription)
   subscription.unsubscribe.mockResolvedValue(true)
@@ -41,14 +44,57 @@ beforeEach(() => {
   requestPermission.mockResolvedValue("granted")
 })
 afterEach(() => {
+  vi.useRealTimers()
   vi.unstubAllGlobals()
   vi.resetAllMocks()
 })
 describe("push permission and device state", () => {
+  it("explains an expired session instead of treating it as a browser failure", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 401 })
+    await expect(loadPushState()).rejects.toThrow("Sua sessão expirou")
+    expect(register).not.toHaveBeenCalled()
+  })
+  it("handles connection failures with a retryable message", async () => {
+    fetchMock.mockRejectedValue(new TypeError("Failed to fetch"))
+    await expect(loadPushState()).rejects.toThrow("Confira sua conexão")
+  })
+  it("does not remain loading forever when the configuration request stalls", async () => {
+    vi.useFakeTimers()
+    fetchMock.mockImplementation(
+      (_url, init: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          init.signal?.addEventListener("abort", () =>
+            reject(new Error("aborted"))
+          )
+        })
+    )
+    const result = expect(loadPushState()).rejects.toThrow("demorou")
+    await vi.advanceTimersByTimeAsync(15000)
+    await result
+  })
+
+  it("offers permission even when service-worker readiness never resolves", async () => {
+    vi.stubGlobal("navigator", {
+      serviceWorker: {
+        register,
+        getRegistration,
+        ready: new Promise(() => {}),
+      },
+    })
+    expect((await loadPushState()).status).toBe("inactive")
+    expect(register).not.toHaveBeenCalled()
+  })
+  it("reports denied permission without registering a worker", async () => {
+    vi.stubGlobal("Notification", { permission: "denied", requestPermission })
+    expect((await loadPushState()).status).toBe("blocked")
+    expect(register).not.toHaveBeenCalled()
+  })
+
   it("checks device state without requesting permission", async () => {
     expect((await loadPushState()).status).toBe("inactive")
     expect(requestPermission).not.toHaveBeenCalled()
     expect(manager.subscribe).not.toHaveBeenCalled()
+    expect(register).not.toHaveBeenCalled()
   })
   it("does not register a worker when globally disabled", async () => {
     fetchMock.mockResolvedValue({

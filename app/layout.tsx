@@ -5,6 +5,8 @@ import { GeistPixelSquare } from "geist/font/pixel"
 import { GeistSans } from "geist/font/sans"
 import type { Metadata, Viewport } from "next"
 
+import { IS_HALLOWEEN } from "@/config/seasonal-theme"
+import halloweenStyles from "@/modules/seasonal-theme/halloween.module.css"
 import { ThemeProvider } from "@/providers/theme-provider"
 
 export const viewport: Viewport = {
@@ -48,7 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${GeistSans.variable} ${GeistMono.variable} ${GeistPixelSquare.variable} h-full antialiased`}
+      className={`${GeistSans.variable} ${GeistMono.variable} ${GeistPixelSquare.variable} h-full antialiased ${IS_HALLOWEEN ? halloweenStyles.theme : ""}`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">

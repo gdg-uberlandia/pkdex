@@ -5,6 +5,8 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 
+import { SeasonalNotificationDecoration } from "@/modules/seasonal-theme/seasonal-decorations"
+
 export function NoticeBell() {
   const pathname = usePathname()
   const [count, setCount] = useState(0)
@@ -40,7 +42,10 @@ export function NoticeBell() {
       aria-label={count ? `Avisos: ${count} não lidos` : "Avisos"}
       className="relative inline-flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <Bell className="size-5" aria-hidden="true" />
+      <span className="relative">
+        <Bell className="size-5" aria-hidden="true" />
+        <SeasonalNotificationDecoration />
+      </span>
       {count > 0 && (
         <span className="absolute top-0 right-0 rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
           {count > 99 ? "99+" : count}

@@ -1,0 +1,233 @@
+.theme {
+  --primary: #ff6b00;
+  --primary-foreground: #261200;
+  --background: #f8fafc;
+  --foreground: #2a1733;
+  --card: #fffdfa;
+  --card-foreground: #2a1733;
+  --popover: #fffdfa;
+  --popover-foreground: #2a1733;
+  --muted: #f2e6ef;
+  --muted-foreground: #725b76;
+  --border: #e8d4dc;
+  --input: #cdb3c7;
+  --ring: #ff6b00;
+  --season-ink: #9a3b00;
+  --season-purple: #7040ab;
+  --season-line: #c7a4c8;
+  --gradient-primary-card: linear-gradient(
+    125deg,
+    #ff9b38 0%,
+    #ff7c13 55%,
+    #ff6b00 100%
+  );
+  --glow-primary: 0 8px 24px #9a3b0018;
+  --card-shadow: 0 6px 18px #54245c0a;
+}
+.theme:global(.dark),
+.theme :global(.dark) {
+  --primary: #ff6b00;
+  --primary-foreground: #261200;
+  --background: #020617;
+  --foreground: #f9f1ff;
+  --card: #20162f;
+  --card-foreground: #f9f1ff;
+  --popover: #20162f;
+  --popover-foreground: #f9f1ff;
+  --muted: #332341;
+  --muted-foreground: #cdbbd9;
+  --border: #523450;
+  --input: #63465f;
+  --ring: #ff6b00;
+  --season-ink: #ffad70;
+  --season-purple: #c4a2ff;
+  --season-line: #62407c;
+  --gradient-primary-card: linear-gradient(
+    125deg,
+    #ff9b38 0%,
+    #ff7c13 55%,
+    #ff6b00 100%
+  );
+  --glow-primary: 0 8px 32px #ff6b0020;
+  --card-shadow: 0 8px 24px #00000030;
+}
+.shell {
+  isolation: isolate;
+}
+.shell header {
+  border-bottom-color: var(--border);
+}
+.shell nav {
+  border-top: 2px solid color-mix(in srgb, var(--primary) 50%, var(--border));
+}
+.theme :global(.text-primary) {
+  color: var(--season-ink);
+}
+.shell :global([data-slot="card"]) {
+  box-shadow: var(--card-shadow);
+}
+.content {
+  position: relative;
+}
+.seasonLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--season-purple);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.seasonLabel span {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.bat {
+  width: 46px;
+  height: 26px;
+  transform: rotate(-10deg);
+  color: var(--season-purple);
+}
+.web {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 78px;
+  height: 78px;
+  color: var(--season-purple);
+  opacity: 0.6;
+}
+.headerGhost {
+  position: absolute;
+  right: -2px;
+  bottom: -1px;
+  width: 12px;
+  height: 12px;
+  color: var(--season-purple);
+  fill: var(--background);
+}
+.scannerBat {
+  position: absolute;
+  z-index: 11;
+  top: -29px;
+  left: calc(50% + 11px);
+  width: 31px;
+  height: 19px;
+  transform: rotate(16deg);
+  color: var(--season-purple);
+  pointer-events: none;
+  filter: drop-shadow(0 1px 0 var(--background));
+}
+
+.decoratedCard {
+  position: relative;
+  isolation: isolate;
+  border-top: 2px solid var(--season-purple);
+}
+.decoratedCard > .web {
+  color: #c4a2ff;
+  opacity: 0.65;
+  width: 90px;
+  height: 90px;
+  z-index: -1;
+}
+.pageAccent {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  height: 42px;
+  margin: 4px 18px 0;
+  padding-right: 58px;
+  color: var(--season-purple);
+  pointer-events: none;
+  user-select: none;
+}
+.pageAccent > span {
+  flex: 1;
+  border-top: 1px dashed
+    color-mix(in srgb, var(--season-purple) 32%, transparent);
+}
+.pageBat {
+  width: 37px;
+  height: 22px;
+  transform: rotate(-12deg);
+}
+.pageBatSmall {
+  width: 25px;
+  height: 16px;
+  transform: rotate(14deg);
+}
+.pageWeb {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  width: 54px;
+  height: 54px;
+  opacity: 0.7;
+}
+
+.pageGhost {
+  width: 30px;
+  height: 35px;
+  flex-shrink: 0;
+  transform: rotate(-10deg);
+}
+.pagePumpkin {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  color: var(--season-ink);
+  transform: rotate(8deg);
+}
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 54px;
+  color: var(--season-purple);
+  pointer-events: none;
+  user-select: none;
+}
+.divider > span {
+  flex: 1;
+  border-top: 1px dashed
+    color-mix(in srgb, var(--season-purple) 35%, transparent);
+}
+.dividerSkeleton {
+  width: 28px;
+  height: 46px;
+  transform: rotate(-12deg);
+}
+.dividerGhost {
+  width: 29px;
+  height: 36px;
+  transform: rotate(10deg);
+}
+.dividerPumpkin {
+  width: 30px;
+  height: 32px;
+  color: var(--season-ink);
+}
+.pageFooter {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 22px;
+  min-height: 68px;
+  padding: 0 20px 18px;
+  color: var(--season-purple);
+  pointer-events: none;
+  user-select: none;
+}
+.footerSkeleton {
+  width: 30px;
+  height: 49px;
+  transform: rotate(-8deg);
+}

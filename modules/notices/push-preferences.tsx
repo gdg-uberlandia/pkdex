@@ -50,6 +50,11 @@ export function PushPreferences() {
       <h2 id="notification-preferences-title" className="font-semibold">
         Notificações
       </h2>
+      {push.status === "error" && !push.publicKey && (
+        <Button variant="outline" onClick={() => void push.retry()}>
+          Tentar novamente
+        </Button>
+      )}
       <p role="status" className="text-sm text-muted-foreground">
         {push.message}
       </p>
