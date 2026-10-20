@@ -322,3 +322,9 @@ em permitir. Falhas de configuração/rede oferecem “Tentar novamente” em ve
 de deixar o botão de permissão desabilitado sem recuperação. As requisições
 de push e a ativação do worker têm timeout de 15 segundos. Permissões negadas
 continuam dependendo das configurações do navegador.
+
+Os ornamentos sazonais incluem fantasmas, abóboras e esqueletos vetoriais, além
+dos morcegos e teias. Aparecem na faixa superior e no rodapé das telas
+autenticadas; a Home também tem um separador temático entre seções. Todos são
+decorativos, estáticos, ocultos para leitores de tela e não interceptam cliques.
+As áreas de scanner continuam sem esses elementos.

@@ -11,6 +11,7 @@ import halloweenStyles from "@/modules/seasonal-theme/halloween.module.css"
 import {
   SeasonalNavigation,
   SeasonalPageDecorations,
+  SeasonalPageFooter,
 } from "@/modules/seasonal-theme/seasonal-decorations"
 
 import { AppHeader } from "./app-header"
@@ -57,6 +58,7 @@ export function AuthenticatedAppShell({
       >
         {!pathname.includes("/scan") && <SeasonalPageDecorations />}
         {children}
+        {!pathname.includes("/scan") && <SeasonalPageFooter />}
       </AppShell>
     </>
   )

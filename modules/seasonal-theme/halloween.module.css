@@ -141,7 +141,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  height: 30px;
+  height: 42px;
   margin: 4px 18px 0;
   padding-right: 58px;
   color: var(--season-purple);
@@ -170,4 +170,64 @@
   width: 54px;
   height: 54px;
   opacity: 0.7;
+}
+
+.pageGhost {
+  width: 30px;
+  height: 35px;
+  flex-shrink: 0;
+  transform: rotate(-10deg);
+}
+.pagePumpkin {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  color: var(--season-ink);
+  transform: rotate(8deg);
+}
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 54px;
+  color: var(--season-purple);
+  pointer-events: none;
+  user-select: none;
+}
+.divider > span {
+  flex: 1;
+  border-top: 1px dashed
+    color-mix(in srgb, var(--season-purple) 35%, transparent);
+}
+.dividerSkeleton {
+  width: 28px;
+  height: 46px;
+  transform: rotate(-12deg);
+}
+.dividerGhost {
+  width: 29px;
+  height: 36px;
+  transform: rotate(10deg);
+}
+.dividerPumpkin {
+  width: 30px;
+  height: 32px;
+  color: var(--season-ink);
+}
+.pageFooter {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 22px;
+  min-height: 68px;
+  padding: 0 20px 18px;
+  color: var(--season-purple);
+  pointer-events: none;
+  user-select: none;
+}
+.footerSkeleton {
+  width: 30px;
+  height: 49px;
+  transform: rotate(-8deg);
 }

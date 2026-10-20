@@ -45,6 +45,7 @@ import type { Profile } from "@/modules/profile/profile.types"
 import halloweenStyles from "@/modules/seasonal-theme/halloween.module.css"
 import {
   SeasonalCardDecoration,
+  SeasonalDivider,
   SeasonalLabel,
 } from "@/modules/seasonal-theme/seasonal-decorations"
 import {
@@ -235,6 +236,7 @@ export default async function HomePage() {
       </Link>
 
       <NextObjective objective={objective} />
+      <SeasonalDivider />
 
       <HomeTicketProgress
         xp={profile.xp}
