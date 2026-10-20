@@ -28,6 +28,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+import { SeasonalCardDecoration } from "@/modules/seasonal-theme/seasonal-decorations"
 
 import type { MissionListItem } from "./mission.service"
 import { MissionKeywordForm } from "./mission-keyword-form"
@@ -190,13 +191,14 @@ function FeaturedMission({ mission }: Readonly<{ mission: MissionListItem }>) {
         <button
           type="button"
           className={cn(
-            "group w-full rounded-3xl p-5 text-left shadow-card transition-transform focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none active:scale-[0.99]",
+            "group relative w-full overflow-hidden rounded-3xl p-5 text-left shadow-card transition-transform focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none active:scale-[0.99]",
             blocked
               ? "bg-card ring-1 ring-border"
               : "bg-(image:--gradient-immersive) text-white"
           )}
         >
-          <div className="flex items-start gap-4">
+          <SeasonalCardDecoration />
+          <div className="relative flex items-start gap-4">
             <MissionImage mission={mission} featured />
             <div className="min-w-0 flex-1">
               <p

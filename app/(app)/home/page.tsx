@@ -26,6 +26,7 @@ import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { buttonVariants } from "@/components/ui/button"
 import { formatLevelLabel, getLevelForXp, MAX_LEVEL_XP } from "@/config/levels"
+import { IS_HALLOWEEN } from "@/config/seasonal-theme"
 import { requireAuth } from "@/lib/require-auth"
 import { cn } from "@/lib/utils"
 import { getHomeCatalogTotals } from "@/modules/home/home.service"
@@ -41,6 +42,11 @@ import { ParticipantSummaryCard } from "@/modules/participant-summary/participan
 import { hasPermission } from "@/modules/profile/profile.authorization"
 import { requireProfileForSession } from "@/modules/profile/profile.service"
 import type { Profile } from "@/modules/profile/profile.types"
+import halloweenStyles from "@/modules/seasonal-theme/halloween.module.css"
+import {
+  SeasonalCardDecoration,
+  SeasonalLabel,
+} from "@/modules/seasonal-theme/seasonal-decorations"
 import {
   findEventOperations,
   isTicketConversionEnabled,
@@ -126,6 +132,7 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-7 px-6 py-6">
+      <SeasonalLabel />
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-4">
           <Link
@@ -514,7 +521,13 @@ function NextObjective({ objective }: Readonly<{ objective: HomeObjective }>) {
   const Icon = objectiveIcons[objective.type]
 
   return (
-    <section className="overflow-hidden rounded-3xl bg-(image:--gradient-immersive) p-5 text-white shadow-card">
+    <section
+      className={cn(
+        "relative overflow-hidden rounded-3xl bg-(image:--gradient-immersive) p-5 text-white shadow-card",
+        IS_HALLOWEEN && halloweenStyles.decoratedCard
+      )}
+    >
+      <SeasonalCardDecoration />
       <div className="flex items-start gap-4">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/10">
           <Icon className="size-6" aria-hidden="true" />

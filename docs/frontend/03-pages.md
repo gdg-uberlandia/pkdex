@@ -291,3 +291,25 @@ atividades gerais ocupam toda a largura. Títulos, descrições e palestrantes s
 resolvidos no servidor; não há controles de avaliação nesta página.
 `/talks` mantém a experiência de avaliações.
 A rota inclui estados de carregamento, erro e programação ainda não publicada.
+
+## Tema sazonal no produto
+
+O tema Halloween está habilitado por `SEASONAL_THEME` em
+`config/seasonal-theme.ts`. Ele aplica tokens na raiz da aplicação, respeitando
+a preferência claro/escuro e o tema escuro forçado do scanner. Login, onboarding
+e páginas autenticadas compartilham a paleta laranja/roxo nos componentes,
+com os fundos claro e escuro originais, sem degradês laranja de fundo.
+O passaporte da Home preserva seu layout original e o ícone de carimbo;
+missões, notificações e navegação recebem ornamentos decorativos, sem alterar
+ações, textos de estado ou recompensas.
+
+A classe do tema, os estilos do shell e todos os ornamentos são condicionados à
+mesma configuração. Ao defini-la como `null`, o produto usa novamente os tokens
+de `app/globals.css` e a apresentação habitual. Os tokens, estilos e ornamentos
+ficam concentrados em `modules/seasonal-theme`.
+
+O passaporte da Home mantém sua composição original, sem mascote.
+O card de próximo objetivo mantém a teia no
+canto. Telas autenticadas recebem uma faixa decorativa com morcegos e teia;
+essa faixa não aparece nos scanners, para preservar a área de câmera. Todos
+os ornamentos ignoram eventos de ponteiro e somem ao desativar o tema sazonal.

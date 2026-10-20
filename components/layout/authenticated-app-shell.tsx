@@ -4,8 +4,14 @@ import { usePathname, useSearchParams } from "next/navigation"
 import type { ReactNode } from "react"
 
 import { Toaster } from "@/components/ui/sonner"
+import { IS_HALLOWEEN } from "@/config/seasonal-theme"
 import { NoticeBell } from "@/modules/notices/notice-bell"
 import type { AccessRole } from "@/modules/profile/profile.schema"
+import halloweenStyles from "@/modules/seasonal-theme/halloween.module.css"
+import {
+  SeasonalNavigation,
+  SeasonalPageDecorations,
+} from "@/modules/seasonal-theme/seasonal-decorations"
 
 import { AppHeader } from "./app-header"
 import { AppShell } from "./app-shell"
@@ -28,6 +34,8 @@ export function AuthenticatedAppShell({
     <>
       <Toaster position="top-center" />
       <AppShell
+        className={IS_HALLOWEEN ? halloweenStyles.shell : undefined}
+        contentClassName={IS_HALLOWEEN ? halloweenStyles.content : undefined}
         header={
           routeLayout.showHeader ? (
             <AppHeader
@@ -40,11 +48,14 @@ export function AuthenticatedAppShell({
         }
         navigation={
           routeLayout.showNavigation ? (
-            <BottomNavigation accessRoles={accessRoles} />
+            <SeasonalNavigation>
+              <BottomNavigation accessRoles={accessRoles} />
+            </SeasonalNavigation>
           ) : undefined
         }
         theme={routeLayout.theme}
       >
+        {!pathname.includes("/scan") && <SeasonalPageDecorations />}
         {children}
       </AppShell>
     </>
