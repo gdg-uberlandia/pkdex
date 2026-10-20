@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 
+import { env } from "@/env"
 import { auth } from "@/lib/auth"
+import { isAllowedRequestOrigin } from "@/lib/http/request-origin"
 import { updateSubscriptionForSession } from "@/modules/notices/notice.service"
 import { isPushEnabled } from "@/modules/notices/push-config"
 
@@ -17,7 +19,7 @@ export async function GET() {
   )
 }
 async function mutate(request: Request, remove: boolean) {
-  if (request.headers.get("origin") !== new URL(request.url).origin)
+  if (!isAllowedRequestOrigin(request, env.NEXT_PUBLIC_APP_URL))
     return NextResponse.json({ error: "Origem inválida" }, { status: 403 })
   const session = await auth()
   if (!session?.user)

@@ -141,3 +141,12 @@ Push já aceito não pode ser recolhido, e envios em andamento podem terminar.
 A exclusão não dispara push nem modifica as inscrições. As duas aplicações
 precisam desta atualização para respeitar a remoção; telas já abertas devem ser
 recarregadas para obter o novo estado.
+
+## Origem das inscrições atrás de proxy
+
+POST e DELETE de `/api/notices/subscription` aceitam o `Origin` do endereço
+público definido em `NEXT_PUBLIC_APP_URL` ou o da URL da própria requisição.
+Isso evita rejeitar o domínio HTTPS público quando o serviço recebe uma URL
+HTTP interna do proxy. Origens ausentes ou externas continuam bloqueadas com
+403, e a validação não confia em headers `x-forwarded-host` arbitrários.
+A autenticação e as regras de inscrição continuam obrigatórias.
