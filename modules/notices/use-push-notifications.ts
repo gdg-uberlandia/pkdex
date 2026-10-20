@@ -15,6 +15,7 @@ export function usePushNotifications() {
   const [busy, setBusy] = useState(false)
   const updating = useRef(false)
   const generation = useRef(0)
+  const retry = useRef<() => Promise<void>>(async () => {})
   useEffect(() => {
     let active = true
     async function refresh(sync: boolean) {
@@ -23,15 +24,21 @@ export function usePushNotifications() {
       try {
         const next = await loadPushState(sync)
         if (active && current === generation.current) setState(next)
-      } catch {
+      } catch (error) {
         if (active && current === generation.current)
           setState({
             status: "error",
             publicKey: null,
             message:
-              "Não foi possível verificar as notificações. Recarregue a página para tentar novamente.",
+              error instanceof Error
+                ? error.message
+                : "Não foi possível verificar as notificações. Tente novamente.",
           })
       }
+    }
+    retry.current = async () => {
+      setState(INITIAL_PUSH_STATE)
+      await refresh(false)
     }
     void refresh(true)
     const onFocus = () => void refresh(false)
@@ -75,5 +82,6 @@ export function usePushNotifications() {
       (state.status === "inactive" || state.status === "error"),
     enable: () => update(true),
     disable: () => update(false),
+    retry: () => retry.current(),
   }
 }

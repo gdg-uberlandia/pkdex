@@ -64,6 +64,14 @@ export function PushOnboardingPrompt() {
           >
             Configurar no perfil
           </Link>
+        ) : push.status === "error" && !push.publicKey ? (
+          <Button
+            className="w-full"
+            variant="secondary"
+            onClick={() => void push.retry()}
+          >
+            Tentar novamente
+          </Button>
         ) : (
           <Button
             className="w-full"

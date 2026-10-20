@@ -12,16 +12,35 @@ export const INITIAL_PUSH_STATE: PushState = {
   message: "Verificando notificações neste dispositivo…",
 }
 
+async function pushFetch(input: string, init?: RequestInit) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 15000)
+  try {
+    return await fetch(input, { ...init, signal: controller.signal })
+  } catch {
+    throw new Error(
+      controller.signal.aborted
+        ? "A verificação demorou mais que o esperado. Tente novamente."
+        : "Não foi possível conectar ao serviço de notificações. Confira sua conexão e tente novamente."
+    )
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 function decodeKey(value: string) {
   const decoded = atob(value.replace(/-/g, "+").replace(/_/g, "/"))
   return Uint8Array.from(decoded, (character) => character.charCodeAt(0))
 }
 async function waitForWorker() {
-  const registration = await navigator.serviceWorker.register("/sw.js")
   let timer: ReturnType<typeof setTimeout> | undefined
   try {
-    await Promise.race([
-      navigator.serviceWorker.ready,
+    return await Promise.race([
+      (async () => {
+        const registration = await navigator.serviceWorker.register("/sw.js")
+        await navigator.serviceWorker.ready
+        return registration
+      })(),
       new Promise<never>((_, reject) => {
         timer = setTimeout(
           () => reject(new Error("Recarregue a página e tente novamente.")),
@@ -29,7 +48,6 @@ async function waitForWorker() {
         )
       }),
     ])
-    return registration
   } finally {
     clearTimeout(timer)
   }
@@ -38,7 +56,7 @@ async function syncSubscription(
   subscription: PushSubscription,
   remove = false
 ) {
-  const response = await fetch("/api/notices/subscription", {
+  const response = await pushFetch("/api/notices/subscription", {
     method: remove ? "DELETE" : "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -54,11 +72,37 @@ async function syncSubscription(
     )
 }
 export async function loadPushState(sync = true): Promise<PushState> {
-  const response = await fetch("/api/notices/subscription")
+  const response = await pushFetch("/api/notices/subscription", {
+    cache: "no-store",
+  })
+  if (response.status === 401 || response.redirected)
+    throw new Error(
+      "Sua sessão expirou. Entre novamente para configurar as notificações."
+    )
   if (!response.ok)
-    throw new Error("Não foi possível verificar as notificações.")
-  const config: { enabled: boolean; publicKey: string | null } =
-    await response.json()
+    throw new Error(
+      "O serviço de notificações está indisponível no momento. Tente novamente."
+    )
+  let raw: unknown
+  try {
+    raw = await response.json()
+  } catch {
+    throw new Error(
+      "Não foi possível ler a configuração de notificações. Recarregue a página e tente novamente."
+    )
+  }
+  if (
+    !raw ||
+    typeof raw !== "object" ||
+    !("enabled" in raw) ||
+    typeof raw.enabled !== "boolean" ||
+    !("publicKey" in raw) ||
+    (raw.publicKey !== null && typeof raw.publicKey !== "string")
+  )
+    throw new Error(
+      "A configuração de notificações não está disponível. Tente novamente."
+    )
+  const config = raw as { enabled: boolean; publicKey: string | null }
   if (!config.enabled)
     return {
       status: "unavailable",
@@ -85,8 +129,19 @@ export async function loadPushState(sync = true): Promise<PushState> {
       message:
         "Este navegador não oferece push aqui. No iPhone, adicione a Pokedex à Tela de Início e abra por lá. Os avisos continuam disponíveis na Pokedex.",
     }
-  const registration = await waitForWorker()
-  const subscription = await registration.pushManager.getSubscription()
+  // A first-time user must not wait for service-worker activation to be allowed to opt in.
+  if (Notification.permission === "default")
+    return {
+      status: "inactive",
+      publicKey: config.publicKey,
+      message:
+        "Receba avisos do evento neste dispositivo, mesmo quando a Pokedex não estiver aberta.",
+    }
+  const registration =
+    Notification.permission === "granted"
+      ? await navigator.serviceWorker.getRegistration()
+      : undefined
+  const subscription = await registration?.pushManager.getSubscription()
   if (subscription && Notification.permission === "granted") {
     if (sync) await syncSubscription(subscription)
     return {

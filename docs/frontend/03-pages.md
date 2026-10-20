@@ -313,3 +313,12 @@ O card de próximo objetivo mantém a teia no
 canto. Telas autenticadas recebem uma faixa decorativa com morcegos e teia;
 essa faixa não aparece nos scanners, para preservar a área de câmera. Todos
 os ornamentos ignoram eventos de ponteiro e somem ao desativar o tema sazonal.
+
+## Recuperar notificações
+
+A verificação inicial de notificações não registra nem aguarda o service worker
+para usuários que ainda não deram permissão. O registro ocorre após o clique
+em permitir. Falhas de configuração/rede oferecem “Tentar novamente” em vez
+de deixar o botão de permissão desabilitado sem recuperação. As requisições
+de push e a ativação do worker têm timeout de 15 segundos. Permissões negadas
+continuam dependendo das configurações do navegador.
