@@ -4,9 +4,15 @@ import type { Session } from "next-auth"
 
 import { SCORES } from "@/config/scores"
 import { env } from "@/env"
-import { findActiveCompanies } from "@/modules/companies/company.repository"
+import {
+  findActiveCompanies,
+  findCompanyById,
+} from "@/modules/companies/company.repository"
 import { findOrInitializeParticipantSummary } from "@/modules/participant-summary/participant-summary.repository"
-import { hasPermission } from "@/modules/profile/profile.authorization"
+import {
+  canReviewMission,
+  hasPermission,
+} from "@/modules/profile/profile.authorization"
 import {
   getProfileByPublicQrId,
   requireProfileForSession,
@@ -20,6 +26,7 @@ import {
   findActiveMissions,
   findMissionAttemptsByParticipant,
   findMissionProgressByParticipant,
+  findReviewableMissions,
   findSharedInterestConnectionCount,
 } from "./mission.repository"
 import {
@@ -272,23 +279,37 @@ export async function listMissionsForSession(
   })
 }
 
-export async function listReviewableMissionsForSession(session: Session) {
+export async function getMissionReviewContextForSession(session: Session) {
   const reviewer = await requireProfileForSession(session)
-
-  if (!hasPermission(reviewer, "review-missions")) {
+  if (
+    !hasPermission(reviewer, "review-missions") &&
+    !hasPermission(reviewer, "review-company-missions")
+  )
     return null
+  const sponsor = reviewer.accessRoles[0] === "sponsor"
+  const company =
+    sponsor && reviewer.sponsorCompanyId
+      ? await findCompanyById(reviewer.eventId, reviewer.sponsorCompanyId)
+      : null
+  const missions =
+    sponsor && !company ? [] : await findReviewableMissions(reviewer.eventId)
+  return {
+    sponsor,
+    companyName: company?.name ?? null,
+    missions: missions
+      .filter((mission) => canReviewMission(reviewer, mission))
+      .map((mission) => ({
+        id: mission.id,
+        title: mission.title,
+        description: mission.description,
+        xpAwarded: mission.xpAwarded ?? SCORES.MISSION_COMPLETION,
+      })),
   }
+}
 
-  const missions = await findActiveMissions(reviewer.eventId)
-
-  return missions
-    .filter((mission) => mission.validationType === "reviewer")
-    .map((mission) => ({
-      id: mission.id,
-      title: mission.title,
-      description: mission.description,
-      xpAwarded: mission.xpAwarded ?? SCORES.MISSION_COMPLETION,
-    }))
+export async function listReviewableMissionsForSession(session: Session) {
+  const context = await getMissionReviewContextForSession(session)
+  return context?.missions ?? null
 }
 
 export async function completeQrMissionForSession(
@@ -331,7 +352,10 @@ export async function reviewMissionForSession(
     return { success: false, code: "INVALID_EVENT" }
   }
 
-  if (!hasPermission(reviewer, "review-missions")) {
+  if (
+    !hasPermission(reviewer, "review-missions") &&
+    !hasPermission(reviewer, "review-company-missions")
+  ) {
     return { success: false, code: "FORBIDDEN" }
   }
 
@@ -423,6 +447,8 @@ function mapCompletionResult(
       }
     case "inactive":
       return { success: false, code: "MISSION_INACTIVE" }
+    case "forbidden":
+      return { success: false, code: "FORBIDDEN" }
     case "invalid-validation-type":
       return { success: false, code: "WRONG_VALIDATION_TYPE" }
     case "not-found":

@@ -21,7 +21,9 @@
 - `profiles.accessRoles` não pode ser alterado pela edição comum do perfil;
 - a reconciliação por e-mail exige um único perfil; ambiguidades são rejeitadas
   sem promover ou criar documentos;
-- somente `reviewer` e `admin` validam missões presenciais;
+- `reviewer` e `admin` validam missões presenciais globalmente; `sponsor`
+  valida somente missões da própria empresa, com autorização relida dentro
+  da transação de conclusão;
 - a autorização é relida no servidor em cada validação;
 - o QR temporário comprova o participante presente, mas não substitui a
   autorização do reviewer nem os pré-requisitos.

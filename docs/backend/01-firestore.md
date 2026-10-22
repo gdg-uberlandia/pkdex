@@ -32,7 +32,8 @@
 Schemas completos devem existir no código e ser validados com Zod. Este documento registra o modelo conceitual, não substitui os contratos tipados.
 
 Os catálogos ativos de empresas, tags e missões usam cache compartilhado de
-15 minutos por evento. Brindes usam cache de 30 segundos porque o estoque é
+15 minutos por evento. A área de validação de missões consulta missões e empresa
+sem esse cache para refletir alterações de vínculo e disponibilidade. Brindes usam cache de 30 segundos porque o estoque é
 mutável; um resgate concluído invalida esse cache imediatamente. Dados
 individuais, conclusões, saldos, resgates e operações permanecem fora do cache.
 Os prazos também limitam a defasagem de alterações feitas pelo painel
@@ -52,14 +53,14 @@ O contrato inicial de `profiles` possui `userId`, `eventId`, `displayName`, `ema
 
 A edição em `/profile/edit` envia somente esses campos editáveis para uma Server Action autenticada. O serviço valida novamente o contrato e o repositório atualiza o documento existente em transação, preservando identidade, evento, QR Code e datas de criação.
 
-`accessRoles` armazena uma ou mais autorizações internas entre `participant`,
-`staff`, `reviewer`, `editor` e `admin`. Novos perfis da Pokedex recebem
+`accessRoles` armazena exatamente uma autorização interna entre `participant`,
+`staff`, `reviewer`, `sponsor`, `editor` e `admin`. Novos perfis da Pokedex recebem
 `["participant"]`; perfis administrativos provisionados pelo painel recebem
 somente `["admin"]`. O campo não participa da edição do perfil. `role` continua
 representando somente o cargo público. Participantes concluem normalmente o
 onboarding; o painel cria administradores com onboarding concluído. Apenas
 `participant` participa das atividades e recebe XP; `reviewer` e `admin` podem
-validar missões presenciais.
+validar missões presenciais globalmente; `sponsor` valida somente as da empresa vinculada.
 
 No setup obrigatório, a mesma transação persiste os campos validados e define `onboardingCompleted: true`. A primeira conclusão de um participante concede 75 XP e atualiza `xpReachedAt`; repetições e perfis sem o papel `participant` não recebem XP. Perfis que já concluíram o onboarding não recebem crédito retroativo. Cancelar o setup não altera o documento; voltar apenas reinicia as etapas introdutórias.
 
@@ -542,3 +543,10 @@ A programação informativa `/schedule` também consulta
 `published` é `true` ela carrega as atividades ativas. A ausência do documento
 significa programação ainda não publicada. Essa leitura ocorre exclusivamente
 no servidor, com o evento obtido do perfil autenticado, e não consulta avaliações.
+
+## Funcionários de empresas
+
+Perfis possuem exatamente uma role. `profiles.sponsorCompanyId` e
+`missions.companyId` vinculam funcionários e missões à empresa; campos ausentes
+equivalem a `null`. A autorização e os registros de confirmação estão descritos
+em [Validação de missões por empresas](./10-sponsor-missions.md).

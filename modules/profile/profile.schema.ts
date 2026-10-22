@@ -7,6 +7,7 @@ export const ACCESS_ROLES = [
   "participant",
   "staff",
   "reviewer",
+  "sponsor",
   "editor",
   "admin",
 ] as const
@@ -15,11 +16,7 @@ export const accessRoleSchema = z.enum(ACCESS_ROLES)
 
 export const accessRolesSchema = z
   .array(accessRoleSchema)
-  .min(1)
-  .refine(
-    (roles) => new Set(roles).size === roles.length,
-    "Stored profile contains duplicated access roles"
-  )
+  .length(1, "Cada perfil deve ter exatamente um papel")
 
 export const GENDER_OPTIONS = [
   "Mulher cis",
@@ -161,6 +158,14 @@ export const storedProfileFieldsSchema = z.object({
   skills: storedSkillsSchema.default([]),
   interests: interestsSchema.optional(),
   accessRoles: accessRolesSchema.default(["participant"]),
+  sponsorCompanyId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(128)
+    .regex(/^[^/]+$/)
+    .nullable()
+    .default(null),
   ticketBalance: z.number().int().nonnegative().default(0),
   convertedXp: z.number().int().nonnegative().default(0),
   onboardingTicketGranted: z.boolean().default(false),

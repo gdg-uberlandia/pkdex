@@ -9,6 +9,8 @@ import { requireProfileForSession } from "@/modules/profile/profile.service"
 import { buildQrCodeUrl } from "./qr-code.contract"
 import { createUserQrToken } from "./user-qr-token"
 
+export class SponsorQrForbiddenError extends Error {}
+
 export type UserQrCode = {
   value: string
   svg: string
@@ -17,6 +19,7 @@ export type UserQrCode = {
 
 export async function issueUserQrCode(session: Session): Promise<UserQrCode> {
   const profile = await requireProfileForSession(session)
+  if (profile.accessRoles[0] === "sponsor") throw new SponsorQrForbiddenError()
   const { token, expiresAt } = createUserQrToken({
     eventId: profile.eventId,
     qrId: profile.qrId,

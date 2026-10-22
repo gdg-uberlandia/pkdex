@@ -64,7 +64,10 @@ ou já existente.
 - `completeQrMissionAction` recebe somente evento e QR público da missão;
 - `reviewMissionAction` recebe a missão escolhida e o QR temporário do
   participante;
-- o servidor carrega o perfil autenticado e autoriza `reviewer` ou `admin`;
+- o servidor carrega o perfil autenticado e autoriza `reviewer` ou `admin`
+  globalmente, ou `sponsor` para missões da empresa vinculada;
+- a transação relê perfil do operador, missão, empresa e pré-requisitos antes
+  de registrar uma confirmação presencial;
 - a pontuação vem da missão ou de `SCORES.MISSION_COMPLETION`;
 - conclusão, auditoria do reviewer e XP são persistidos em transação
   idempotente.
