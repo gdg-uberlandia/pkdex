@@ -5,6 +5,14 @@ abre cada mensagem em `/notices/{uuid}`. O sino na home e nos cabeçalhos mostra
 não lidos, atualizados na navegação, ao retornar à janela e a cada minuto com a
 página visível. O histórico independe da permissão de notificações.
 
+Na lista, “Marcar todas como lidas” aparece quando existem avisos não lidos.
+A ação marca os avisos disponíveis no momento para o perfil autenticado,
+atualiza a lista e o contador do sino e mantém o histórico para consulta.
+Novos avisos publicados depois continuam não lidos. A operação usa transações
+em grupos de até 400 leituras, preservando o primeiro `readAt` e permitindo
+repetir após uma falha sem duplicar registros. Identidade e evento vêm da
+sessão, e o estado de leitura dos demais usuários não é alterado.
+
 ## Dados compartilhados
 
 Todas as coleções recebem `test_` com `DEVMODE=true` na Pokedex e `DEV_MODE=true`
@@ -118,10 +126,14 @@ botão fica oculto durante a verificação, com push ativo e com push desativado
 globalmente ou sem chave. O status é verificado novamente ao retornar à janela,
 sem pedir permissão automaticamente.
 
-A seção de notificações do perfil inclui um tutorial de instalação pelo Chrome
-no iPhone enquanto o push não está ativo e há chave pública disponível. O texto
-explica que é necessário adicionar à Tela de Início e abrir pelo novo ícone
-antes de permitir notificações, com link para a ajuda oficial do Chrome.
+A seção de notificações do perfil identifica sistema, navegador e execução como
+app instalado no próprio dispositivo, sem persistir esses dados. As instruções
+mudam entre Android, iPhone/iPad e computador, com orientações específicas para
+Chrome, Safari e Firefox e alternativa para navegadores internos de outros apps.
+A identificação é uma heurística para ajuda; a disponibilidade de push continua
+baseada nos recursos reais do navegador. Apps instalados não repetem os passos
+de instalação; permissões bloqueadas recebem orientação para as configurações.
+Os passos incluem links para a documentação oficial de Apple, Google e Mozilla.
 
 ## Exclusão administrativa
 

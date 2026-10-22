@@ -3,6 +3,7 @@ import Link from "next/link"
 
 import { requireAuth } from "@/lib/require-auth"
 import { cn } from "@/lib/utils"
+import { MarkAllNoticesReadButton } from "@/modules/notices/mark-all-notices-read-button"
 import { getNoticesForSession } from "@/modules/notices/notice.service"
 import { NoticeTimestamp } from "@/modules/notices/notice-timestamp"
 import { PushSettingsLink } from "@/modules/notices/push-settings-link"
@@ -61,6 +62,7 @@ export default async function NoticesPage() {
               {notices.length} {notices.length === 1 ? "aviso" : "avisos"}
             </span>
           </div>
+          {unread > 0 && <MarkAllNoticesReadButton />}
           <ul className="space-y-3">
             {notices.map((notice) => {
               const Icon = notice.read ? MailOpen : Bell

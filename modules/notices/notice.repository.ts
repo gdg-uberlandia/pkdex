@@ -82,6 +82,31 @@ export async function markNoticeRead(
       transaction.create(read, { eventId, userId, readAt: Timestamp.now() })
   })
 }
+export async function markAllNoticesRead(eventId: string, userId: string) {
+  const snapshot = await notices()
+    .where("eventId", "==", eventId)
+    .select("deletedAt")
+    .get()
+  const references = snapshot.docs
+    .filter((doc) => doc.data().deletedAt == null)
+    .map((doc) => readRef(eventId, userId).doc(doc.id))
+  // Keep transactions bounded and preserve first reads during concurrent requests.
+  for (let offset = 0; offset < references.length; offset += 400) {
+    const chunk = references.slice(offset, offset + 400)
+    await firestore.runTransaction(async (transaction) => {
+      const reads = await transaction.getAll(...chunk)
+      for (const read of reads) {
+        if (!read.exists)
+          transaction.create(read.ref, {
+            eventId,
+            userId,
+            readAt: Timestamp.now(),
+          })
+      }
+    })
+  }
+}
+
 export async function saveSubscription(
   eventId: string,
   userId: string,

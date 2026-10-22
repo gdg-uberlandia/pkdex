@@ -1,7 +1,11 @@
 import type { Session } from "next-auth"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-const mocks = vi.hoisted(() => ({ save: vi.fn(), remove: vi.fn() }))
+const mocks = vi.hoisted(() => ({
+  save: vi.fn(),
+  remove: vi.fn(),
+  readAll: vi.fn(),
+}))
 vi.mock("@/modules/profile/profile.service", () => ({
   requireProfileForSession: async () => ({
     eventId: "event",
@@ -10,10 +14,14 @@ vi.mock("@/modules/profile/profile.service", () => ({
   }),
 }))
 vi.mock("./notice.repository", () => ({
+  markAllNoticesRead: mocks.readAll,
   saveSubscription: mocks.save,
   removeSubscription: mocks.remove,
 }))
-import { updateSubscriptionForSession } from "./notice.service"
+import {
+  readAllNoticesForSession,
+  updateSubscriptionForSession,
+} from "./notice.service"
 const session = {} as Session
 
 afterEach(() => {
@@ -38,4 +46,9 @@ describe("subscription switch enforcement", () => {
     await updateSubscriptionForSession(session, {})
     expect(mocks.save).toHaveBeenCalledWith("event", "me", {})
   })
+})
+
+it("derives the bulk read user and event from the authenticated profile", async () => {
+  await readAllNoticesForSession(session)
+  expect(mocks.readAll).toHaveBeenCalledWith("event", "me")
 })
