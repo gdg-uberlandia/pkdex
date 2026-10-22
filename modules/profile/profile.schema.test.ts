@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import { profileUpdateSchema } from "./profile.schema"
+import {
+  accessRolesSchema,
+  profileUpdateSchema,
+  storedProfileFieldsSchema,
+} from "./profile.schema"
 
 const baseProfile = {
   displayName: "Pessoa Participante",
@@ -53,4 +57,22 @@ describe("profile update schema", () => {
 
     expect(result.website).toBe("https://www.meu-website.com")
   })
+})
+
+it("requires exactly one role and prevents public updates of sponsor affiliation", () => {
+  expect(accessRolesSchema.parse(["sponsor"])).toEqual(["sponsor"])
+  expect(accessRolesSchema.safeParse(["sponsor", "reviewer"]).success).toBe(
+    false
+  )
+  expect(
+    profileUpdateSchema.safeParse({
+      ...baseProfile,
+      sponsorCompanyId: "company-a",
+    }).success
+  ).toBe(false)
+  expect(
+    profileUpdateSchema.safeParse({ ...baseProfile, accessRoles: ["sponsor"] })
+      .success
+  ).toBe(false)
+  expect(storedProfileFieldsSchema.parse({}).sponsorCompanyId).toBeNull()
 })

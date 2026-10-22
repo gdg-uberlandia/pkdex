@@ -13,7 +13,11 @@ import {
   getParticipantSummaryRef,
   incrementParticipantSummary,
 } from "@/modules/participant-summary/participant-summary.repository"
-import { accessRolesSchema } from "@/modules/profile/profile.schema"
+import { canReviewMission } from "@/modules/profile/profile.authorization"
+import {
+  accessRolesSchema,
+  storedProfileFieldsSchema,
+} from "@/modules/profile/profile.schema"
 
 import {
   completeQrMissionInputSchema,
@@ -35,6 +39,7 @@ const PROFILES_COLLECTION = getFirestoreCollectionName("profiles")
 
 const missionDocumentSchema = z.object({
   eventId: missionFieldsSchema.shape.eventId,
+  companyId: missionFieldsSchema.shape.companyId,
   qrId: missionFieldsSchema.shape.qrId,
   title: missionFieldsSchema.shape.title,
   description: missionFieldsSchema.shape.description,
@@ -66,6 +71,13 @@ const profileScoreSchema = z.object({
   xp: z.number().int().nonnegative().default(0),
 })
 
+const missionReviewerSchema = z.object({
+  userId: profileScoreSchema.shape.userId,
+  eventId: profileScoreSchema.shape.eventId,
+  accessRoles: accessRolesSchema,
+  sponsorCompanyId: storedProfileFieldsSchema.shape.sponsorCompanyId,
+})
+
 export type CompleteMissionResult =
   | Readonly<{
       status: "completed" | "already-completed"
@@ -74,6 +86,7 @@ export type CompleteMissionResult =
     }>
   | Readonly<{
       status:
+        | "forbidden"
         | "quiz-not-passed"
         | "invalid-answers"
         | "quiz-changed"
@@ -173,6 +186,20 @@ export async function findActiveMissions(eventId: string): Promise<Mission[]> {
     createdAt: new Date(mission.createdAt),
     updatedAt: new Date(mission.updatedAt),
   }))
+}
+
+// Validation screens must reflect company assignments and activation changes immediately.
+export async function findReviewableMissions(
+  eventId: string
+): Promise<Mission[]> {
+  const missions = await loadActiveMissions(eventId)
+  return missions
+    .filter((mission) => mission.validationType === "reviewer")
+    .map((mission) => ({
+      ...mission,
+      createdAt: new Date(mission.createdAt),
+      updatedAt: new Date(mission.updatedAt),
+    }))
 }
 
 export async function findMissionProgressByParticipant(
@@ -324,19 +351,19 @@ export async function completeMission({
     return { status: "not-found" }
   }
 
-  const mission = parseMissionDocument(target.id, target.data)
+  const initialMission = parseMissionDocument(target.id, target.data)
 
-  if (mission.eventId !== validatedEventId) {
+  if (initialMission.eventId !== validatedEventId) {
     return { status: "not-found" }
   }
 
-  if (!mission.active) {
+  if (!initialMission.active) {
     return { status: "inactive" }
   }
 
   if (
-    mission.validationType !== validationType ||
-    (validationType === "qr" && mission.qrId !== qrId) ||
+    initialMission.validationType !== validationType ||
+    (validationType === "qr" && initialMission.qrId !== qrId) ||
     (validationType === "reviewer" && !validatedBy)
   ) {
     return { status: "invalid-validation-type" }
@@ -346,7 +373,7 @@ export async function completeMission({
     validatedEventId,
     validatedParticipantId,
     "mission",
-    mission.id
+    initialMission.id
   )
   const profileRef = firestore
     .collection(PROFILES_COLLECTION)
@@ -357,7 +384,7 @@ export async function completeMission({
   const attemptRef = firestore
     .collection(getFirestoreCollectionName("missionAttempts"))
     .doc(completionId)
-  const prerequisiteRefs = mission.prerequisites.map((prerequisite) =>
+  const prerequisiteRefs = initialMission.prerequisites.map((prerequisite) =>
     firestore
       .collection(COMPLETIONS_COLLECTION)
       .doc(
@@ -371,23 +398,77 @@ export async function completeMission({
   )
 
   return firestore.runTransaction(async (transaction) => {
+    let mission = initialMission
     const [
       profileSnapshot,
       completionSnapshot,
       attemptSnapshot,
       missionSnapshot,
-      ...prerequisiteSnapshots
+      ...initialPrerequisiteSnapshots
     ] = await Promise.all([
       transaction.get(profileRef),
       transaction.get(completionRef),
       transaction.get(attemptRef),
-      validationType === "quiz"
+      validationType === "quiz" || validationType === "reviewer"
         ? transaction.get(
             firestore.collection(MISSIONS_COLLECTION).doc(mission.id)
           )
         : Promise.resolve(null),
-      ...prerequisiteRefs.map((reference) => transaction.get(reference)),
+      ...(validationType === "reviewer"
+        ? []
+        : prerequisiteRefs.map((reference) => transaction.get(reference))),
     ])
+
+    let prerequisiteSnapshots = initialPrerequisiteSnapshots
+    if (validationType === "reviewer") {
+      if (!missionSnapshot?.exists) return { status: "not-found" }
+      const currentMission = parseMissionDocument(
+        missionSnapshot.id,
+        missionSnapshot.data()
+      )
+      const reviewerSnapshot = await transaction.get(
+        firestore.collection(PROFILES_COLLECTION).doc(validatedBy!)
+      )
+      const reviewer = missionReviewerSchema.safeParse(reviewerSnapshot.data())
+      if (
+        !reviewer.success ||
+        currentMission.eventId !== validatedEventId ||
+        reviewer.data.userId !== validatedBy ||
+        !canReviewMission(reviewer.data, currentMission)
+      )
+        return { status: "forbidden" }
+      if (reviewer.data.accessRoles[0] === "sponsor") {
+        const company = await transaction.get(
+          firestore
+            .collection(getFirestoreCollectionName("companies"))
+            .doc(reviewer.data.sponsorCompanyId!)
+        )
+        if (
+          !company.exists ||
+          company.data()?.eventId !== validatedEventId ||
+          company.data()?.active !== true
+        )
+          return { status: "forbidden" }
+      }
+      // Rebuild prerequisite reads from the current mission, not the pre-transaction snapshot.
+      prerequisiteSnapshots = await Promise.all(
+        currentMission.prerequisites.map((prerequisite) =>
+          transaction.get(
+            firestore
+              .collection(COMPLETIONS_COLLECTION)
+              .doc(
+                getCompletionId(
+                  validatedEventId,
+                  validatedParticipantId,
+                  prerequisite.type,
+                  prerequisite.activityId
+                )
+              )
+          )
+        )
+      )
+      mission = currentMission
+    }
 
     if (!profileSnapshot.exists) {
       return { status: "profile-unavailable" }

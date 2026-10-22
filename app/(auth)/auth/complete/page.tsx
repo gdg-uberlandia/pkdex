@@ -26,6 +26,8 @@ export default async function CompleteAuthenticationPage({
 
   const profile = await requireProfileForSession(session)
 
+  if (profile.accessRoles[0] === "sponsor") redirect("/missions")
+
   if (!profile.onboardingCompleted) {
     redirect("/onboarding")
   }

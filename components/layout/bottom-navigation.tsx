@@ -40,23 +40,34 @@ export function BottomNavigation({
   const pathname = usePathname()
   const canOperate =
     accessRoles.includes("reviewer") || accessRoles.includes("admin")
-  const visibleNavigationItems = navigationItems.map((item) =>
-    item.href === "/passport" && canOperate
-      ? {
-          ...item,
-          href: "/operations",
-          label: "Operações",
-          icon: ClipboardList,
-        }
-      : item
-  )
+  const sponsor = accessRoles[0] === "sponsor"
+  const visibleNavigationItems = sponsor
+    ? [
+        { href: "/missions", label: "Validar missões", icon: Target },
+        { href: "/sponsor/account", label: "Conta", icon: UserRound },
+      ]
+    : navigationItems.map((item) =>
+        item.href === "/passport" && canOperate
+          ? {
+              ...item,
+              href: "/operations",
+              label: "Operações",
+              icon: ClipboardList,
+            }
+          : item
+      )
 
   return (
     <nav
       className="relative z-10 shrink-0 border-t border-border/70 bg-background/95 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur-sm"
       aria-label="Navegação principal"
     >
-      <ul className="grid grid-cols-5 items-end">
+      <ul
+        className={cn(
+          "grid items-end",
+          sponsor ? "grid-cols-2" : "grid-cols-5"
+        )}
+      >
         {visibleNavigationItems.map(
           ({ href, label, icon: Icon, isScanner }) => {
             const isActive = isItemActive(pathname, href)

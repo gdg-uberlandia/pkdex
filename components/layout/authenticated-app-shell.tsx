@@ -41,7 +41,9 @@ export function AuthenticatedAppShell({
           routeLayout.showHeader ? (
             <AppHeader
               title={routeLayout.title}
-              actions={<NoticeBell />}
+              actions={
+                accessRoles[0] === "sponsor" ? undefined : <NoticeBell />
+              }
               showBack={Boolean(routeLayout.backHref)}
               backHref={routeLayout.backHref}
             />

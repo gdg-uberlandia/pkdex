@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/card"
 import { requireAuth } from "@/lib/require-auth"
 import {
+  getMissionReviewContextForSession,
   listMissionsForSession,
-  listReviewableMissionsForSession,
+  type listReviewableMissionsForSession,
 } from "@/modules/missions/mission.service"
 import { MissionParticipantExperience } from "@/modules/missions/mission-participant-experience"
 
@@ -35,23 +36,30 @@ export default async function MissionsPage({
   searchParams,
 }: MissionsPageProps) {
   const session = await requireAuth()
-  const [missions, reviewableMissions, resultParams] = await Promise.all([
-    listMissionsForSession(session),
-    listReviewableMissionsForSession(session),
+  const [reviewContext, resultParams] = await Promise.all([
+    getMissionReviewContextForSession(session),
     searchParams,
   ])
 
-  if (reviewableMissions) {
+  if (reviewContext) {
+    const { sponsor, companyName, missions: reviewableMissions } = reviewContext
     return (
       <div className="space-y-6 p-6">
         <section className="space-y-1">
           <Badge variant="secondary">
             <ShieldCheck aria-hidden="true" />
-            Área da organização
+            {sponsor ? "Área da empresa" : "Área da organização"}
           </Badge>
           <h1 className="text-2xl font-bold tracking-tight">Validar missões</h1>
+          {sponsor && (
+            <p className="font-medium">
+              {companyName ?? "Empresa indisponível"}
+            </p>
+          )}
           <p className="text-sm leading-6 text-muted-foreground">
-            Escolha a missão realizada e depois leia o QR Code do participante.
+            {sponsor && !companyName
+              ? "Peça à organização para conferir seu vínculo com uma empresa ativa."
+              : "Escolha a missão realizada e depois leia o QR Code do participante."}
           </p>
         </section>
 
@@ -62,6 +70,7 @@ export default async function MissionsPage({
     )
   }
 
+  const missions = await listMissionsForSession(session)
   if (missions.length === 0) {
     return (
       <EmptyState

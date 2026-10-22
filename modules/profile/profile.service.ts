@@ -106,6 +106,8 @@ export async function updateProfileForSession(
 ): Promise<Profile> {
   const validatedInput = profileUpdateSchema.parse(input)
   const currentProfile = await requireProfileForSession(session)
+  if (currentProfile.accessRoles[0] === "sponsor")
+    throw new Error("Sponsor accounts cannot edit participant profiles")
 
   await updateProfileByUserId(currentProfile.userId, validatedInput)
 
@@ -124,6 +126,8 @@ export async function completeProfileForSession(
 ): Promise<Profile> {
   const validatedInput = profileUpdateSchema.parse(input)
   const currentProfile = await requireProfileForSession(session)
+  if (currentProfile.accessRoles[0] === "sponsor")
+    throw new Error("Sponsor accounts cannot edit participant profiles")
 
   await completeProfileByUserId(currentProfile.userId, validatedInput)
 

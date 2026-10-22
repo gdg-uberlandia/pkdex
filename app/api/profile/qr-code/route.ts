@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
-import { issueUserQrCode } from "@/modules/qr-code/user-qr-code.service"
+import {
+  issueUserQrCode,
+  SponsorQrForbiddenError,
+} from "@/modules/qr-code/user-qr-code.service"
 
 export const dynamic = "force-dynamic"
 
@@ -27,6 +30,15 @@ export async function GET() {
       },
     })
   } catch (error) {
+    if (error instanceof SponsorQrForbiddenError)
+      return NextResponse.json(
+        {
+          code: "FORBIDDEN",
+          message:
+            "Esta conta possui acesso somente à validação de missões da empresa.",
+        },
+        { status: 403 }
+      )
     console.error("Failed to issue authenticated user QR Code", error)
 
     return NextResponse.json(

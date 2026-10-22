@@ -126,6 +126,16 @@ export function getRouteLayout(
   source: string | null,
   accessRoles: AccessRole[]
 ): RouteLayout {
+  if (accessRoles[0] === "sponsor") {
+    if (pathname === "/missions")
+      return {
+        title: "Validar missões",
+        showHeader: true,
+        showNavigation: true,
+      }
+    if (pathname === "/sponsor/account")
+      return { title: "Sua conta", showHeader: true, showNavigation: true }
+  }
   const routeLayout =
     routeLayouts[pathname] ??
     (pathname.startsWith("/notices/")

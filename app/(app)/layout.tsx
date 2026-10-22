@@ -17,7 +17,7 @@ export default async function AuthenticatedLayout({
   const session = await requireAuth()
   const profile = await requireProfileForSession(session)
 
-  if (!profile.onboardingCompleted) {
+  if (!profile.onboardingCompleted && profile.accessRoles[0] !== "sponsor") {
     redirect("/onboarding")
   }
 

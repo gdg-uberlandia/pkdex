@@ -88,3 +88,11 @@ derivadas no servidor por operação.
 ## Próximo documento
 
 ➡️ [QR Code](./03-qr-code.md)
+
+## Sponsors
+
+Sponsors seguem diretamente para `/missions`, inclusive com onboarding
+incompleto, e têm navegação restrita à validação e à conta. O proxy fornece
+o pathname ao servidor e `requireAuth` aplica o redirecionamento de páginas.
+As operações mantêm autorização própria. Consulte
+[Validação de missões por empresas](./10-sponsor-missions.md).

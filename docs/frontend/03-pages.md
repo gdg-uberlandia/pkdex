@@ -328,3 +328,11 @@ dos morcegos e teias. Aparecem na faixa superior e no rodapé das telas
 autenticadas; a Home também tem um separador temático entre seções. Todos são
 decorativos, estáticos, ocultos para leitores de tela e não interceptam cliques.
 As áreas de scanner continuam sem esses elementos.
+
+## Atendimento por funcionários de empresas
+
+Sponsors usam `/missions` com lista restrita à empresa e
+`/missions/review/{missionId}` para ler o QR temporário do participante.
+`/sponsor/account` mostra identidade, empresa e saída. A navegação não apresenta
+recursos de participante nem Central de Operações. Consulte
+[Validação de missões por empresas](../backend/10-sponsor-missions.md).
