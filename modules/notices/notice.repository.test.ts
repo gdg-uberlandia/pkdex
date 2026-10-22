@@ -8,10 +8,11 @@ const mocks = vi.hoisted(() => {
   const read = { kind: "read" }
   const device = { kind: "device" }
   const get = vi.fn()
+  const getAll = vi.fn()
   const create = vi.fn()
   const remove = vi.fn()
   const set = vi.fn()
-  const transaction = { get, create, delete: remove }
+  const transaction = { get, getAll, create, delete: remove }
   return {
     notice,
     read,
@@ -21,6 +22,7 @@ const mocks = vi.hoisted(() => {
     remove,
     set,
     transaction,
+    getAll,
     find,
     list,
     reads,
@@ -52,6 +54,7 @@ import {
   countUnreadNotices,
   findNotice,
   listNotices,
+  markAllNoticesRead,
   markNoticeRead,
   removeSubscription,
   saveSubscription,
@@ -153,5 +156,58 @@ describe("notice privacy and integrity", () => {
     expect(mocks.set).toHaveBeenCalledWith(
       expect.objectContaining({ eventId: "current", userId: "me" })
     )
+  })
+})
+
+describe("mark all notices read", () => {
+  it("marks only visible notices and preserves existing first reads", async () => {
+    mocks.list.mockResolvedValueOnce({
+      docs: [
+        { id: "new", data: () => ({}) },
+        { id: "already-read", data: () => ({ deletedAt: null }) },
+        { id: "deleted", data: () => ({ deletedAt: new Date() }) },
+      ],
+    })
+    mocks.getAll.mockResolvedValueOnce([
+      { exists: false, ref: mocks.read },
+      { exists: true, ref: { kind: "existing-read" } },
+    ])
+    await markAllNoticesRead("current", "me")
+    expect(mocks.getAll).toHaveBeenCalledWith(mocks.read, mocks.read)
+    expect(mocks.create).toHaveBeenCalledTimes(1)
+    expect(mocks.create).toHaveBeenCalledWith(
+      mocks.read,
+      expect.objectContaining({ eventId: "current", userId: "me" })
+    )
+  })
+  it("does not write when there are no visible notices", async () => {
+    mocks.list.mockResolvedValueOnce({ docs: [] })
+    await markAllNoticesRead("current", "me")
+    expect(mocks.getAll).not.toHaveBeenCalled()
+    expect(mocks.create).not.toHaveBeenCalled()
+  })
+  it("does not rewrite receipts when the action is repeated", async () => {
+    mocks.list.mockResolvedValueOnce({
+      docs: [{ id: "read", data: () => ({}) }],
+    })
+    mocks.getAll.mockResolvedValueOnce([{ exists: true, ref: mocks.read }])
+    await markAllNoticesRead("current", "me")
+    expect(mocks.create).not.toHaveBeenCalled()
+  })
+  it("bounds transactions for histories larger than the write limit", async () => {
+    mocks.list.mockResolvedValueOnce({
+      docs: Array.from({ length: 501 }, (_, id) => ({
+        id: String(id),
+        data: () => ({}),
+      })),
+    })
+    mocks.getAll.mockImplementation(async (...references: unknown[]) =>
+      references.map((ref) => ({ exists: false, ref }))
+    )
+    await markAllNoticesRead("current", "me")
+    expect(mocks.getAll.mock.calls.map((call) => call.length)).toEqual([
+      400, 101,
+    ])
+    expect(mocks.create).toHaveBeenCalledTimes(501)
   })
 })

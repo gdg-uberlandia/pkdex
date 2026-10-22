@@ -127,7 +127,7 @@ export async function loadPushState(sync = true): Promise<PushState> {
       status: "unavailable",
       publicKey: config.publicKey,
       message:
-        "Este navegador não oferece push aqui. No iPhone, adicione a Pokedex à Tela de Início e abra por lá. Os avisos continuam disponíveis na Pokedex.",
+        "Este navegador não oferece notificações push neste modo. Confira as orientações para seu dispositivo no Perfil. Os avisos continuam disponíveis na Pokédex.",
     }
   // A first-time user must not wait for service-worker activation to be allowed to opt in.
   if (Notification.permission === "default")

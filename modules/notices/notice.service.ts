@@ -8,6 +8,7 @@ import {
   countUnreadNotices,
   findNotice,
   listNotices,
+  markAllNoticesRead,
   markNoticeRead,
   removeSubscription,
   saveSubscription,
@@ -46,4 +47,9 @@ export async function updateSubscriptionForSession(
 export async function getUnreadCountForSession(session: Session) {
   const profile = await requireProfileForSession(session)
   return countUnreadNotices(profile.eventId, profile.userId)
+}
+
+export async function readAllNoticesForSession(session: Session) {
+  const profile = await requireProfileForSession(session)
+  await markAllNoticesRead(profile.eventId, profile.userId)
 }
