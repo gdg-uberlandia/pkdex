@@ -1,7 +1,6 @@
 import {
   ChevronRight,
   ExternalLink,
-  Palette,
   Pencil,
   QrCode,
   UsersRound,
@@ -11,7 +10,7 @@ import Link from "next/link"
 import type { ReactNode } from "react"
 
 import { SignOutButton } from "@/components/auth/sign-out-button"
-import { ThemeSelector } from "@/components/theme/theme-selector"
+import { ThemePreferences } from "@/components/theme/theme-preferences"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -19,7 +18,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { requireAuth } from "@/lib/require-auth"
 import { cn } from "@/lib/utils"
 import { signOutCurrentUser } from "@/modules/auth/auth.actions"
+import { findActivityAvailability } from "@/modules/event-activities/activity-availability.repository"
+import { ActivityAvailabilityControls } from "@/modules/event-activities/activity-availability-controls"
 import { PushPreferences } from "@/modules/notices/push-preferences"
+import { hasPermission } from "@/modules/profile/profile.authorization"
 import { getLinkedinProfileUrl } from "@/modules/profile/profile.schema"
 import { requireProfileForSession } from "@/modules/profile/profile.service"
 import { ProfileHelp } from "@/modules/profile/profile-help"
@@ -41,6 +43,9 @@ function getInitials(displayName: string) {
 export default async function ProfilePage() {
   const session = await requireAuth()
   const profile = await requireProfileForSession(session)
+  const availability = hasPermission(profile, "manage-event-operations")
+    ? await findActivityAvailability(profile.eventId)
+    : null
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-6">
@@ -160,20 +165,10 @@ export default async function ProfilePage() {
         </div>
       </section>
 
-      <Card className="rounded-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Palette className="size-5 text-primary" aria-hidden="true" />
-            Aparência
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm leading-6 text-muted-foreground">
-            Escolha como o aplicativo deve aparecer neste dispositivo.
-          </p>
-          <ThemeSelector />
-        </CardContent>
-      </Card>
+      <ThemePreferences />
+      {availability && (
+        <ActivityAvailabilityControls availability={availability} />
+      )}
       <PushPreferences />
       <ProfileHelp />
 

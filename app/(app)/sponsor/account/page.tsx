@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 
+import { ThemePreferences } from "@/components/theme/theme-preferences"
 import { Button } from "@/components/ui/button"
 import { requireAuth } from "@/lib/require-auth"
 import { signOutCurrentUser } from "@/modules/auth/auth.actions"
@@ -22,6 +23,7 @@ export default async function SponsorAccountPage() {
         Seu acesso permite confirmar somente as missões presenciais da sua
         empresa. Para ajustar o vínculo, procure a organização.
       </p>
+      <ThemePreferences />
       <form action={signOutCurrentUser}>
         <Button variant="outline" type="submit">
           Sair

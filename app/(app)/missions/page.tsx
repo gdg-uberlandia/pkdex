@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { requireAuth } from "@/lib/require-auth"
+import { cn } from "@/lib/utils"
 import {
   getMissionReviewContextForSession,
   listMissionsForSession,
@@ -63,6 +64,15 @@ export default async function MissionsPage({
           </p>
         </section>
 
+        {!reviewContext.missionsEnabled && (
+          <p
+            role="status"
+            className="rounded-xl bg-warning/15 p-4 text-sm text-warning"
+          >
+            A organização pausou as conclusões de missões. Novas validações
+            estão bloqueadas para todas as empresas.
+          </p>
+        )}
         {resultParams.reviewResult && <ReviewFeedback params={resultParams} />}
 
         <MissionReviewerList missions={reviewableMissions} />
@@ -111,17 +121,21 @@ function ReviewFeedback({
     PREREQUISITE_MISSING: "O participante ainda não cumpriu os pré-requisitos.",
     PROFILE_UNAVAILABLE: "O perfil do participante não está disponível.",
     QR_EXPIRED: "O QR Code expirou. Peça ao participante para atualizá-lo.",
+    MISSIONS_DISABLED: "A organização pausou as conclusões de missões.",
     WRONG_VALIDATION_TYPE: "Esta missão não aceita validação presencial.",
   }
 
   return (
     <div
       role={success ? "status" : "alert"}
-      className={
-        success
-          ? "rounded-xl bg-primary/10 p-4 text-sm text-primary"
-          : "rounded-xl bg-destructive/10 p-4 text-sm text-destructive"
-      }
+      className={cn(
+        "rounded-xl border p-4 text-sm",
+        params.reviewResult === "MISSION_COMPLETED"
+          ? "border-success/30 bg-success/15 text-success"
+          : params.reviewResult === "MISSION_ALREADY_COMPLETED"
+            ? "border-warning/30 bg-warning/15 text-warning"
+            : "border-destructive/30 bg-destructive/15 text-destructive"
+      )}
     >
       {params.reviewResult === "MISSION_COMPLETED"
         ? `${params.participant} concluiu “${params.mission}” e recebeu ${params.xp} XP.`

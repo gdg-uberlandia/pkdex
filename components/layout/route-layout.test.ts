@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { getRouteLayout } from "./route-layout"
+import { getRouteLayout, isScannerRoute } from "./route-layout"
 
 describe("return destinations", () => {
   it("shows the notification invitation as a full screen step", () => {
@@ -66,4 +66,20 @@ describe("return destinations", () => {
       "/home"
     )
   })
+})
+
+it("identifies every scanner mode and keeps unrelated mission pages outside the scanner layout", () => {
+  for (const pathname of [
+    "/scan",
+    "/operations/scan",
+    "/missions/review/activation",
+  ])
+    expect(isScannerRoute(pathname)).toBe(true)
+  for (const pathname of [
+    "/missions",
+    "/missions/reviewer",
+    "/sponsor/account",
+    "/profile/qr-code",
+  ])
+    expect(isScannerRoute(pathname)).toBe(false)
 })

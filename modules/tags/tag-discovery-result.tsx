@@ -29,6 +29,11 @@ const tagDiscoveryErrorMessages: Record<
     title: "Complete seu perfil",
     description: "Finalize seu perfil antes de encontrar tags e receber XP.",
   },
+  TAGS_DISABLED: {
+    title: "Tags temporariamente bloqueadas",
+    description:
+      "A organização pausou novas descobertas de tags. Tente novamente quando forem liberadas.",
+  },
   TAG_INACTIVE: {
     title: "Tag indisponível",
     description: "Esta tag não pode ser descoberta neste momento.",

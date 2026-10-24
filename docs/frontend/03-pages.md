@@ -336,3 +336,17 @@ Sponsors usam `/missions` com lista restrita à empresa e
 `/sponsor/account` mostra identidade, empresa e saída. A navegação não apresenta
 recursos de participante nem Central de Operações. Consulte
 [Validação de missões por empresas](../backend/10-sponsor-missions.md).
+
+## Tema de sponsors e controles de atividades
+
+`/sponsor/account` oferece o seletor Sistema/Claro/Escuro usado pelo perfil
+comum. A preferência continua local ao navegador. O perfil de administradores
+inclui controles independentes para bloquear/liberar tags e missões; os demais
+papéis não recebem esses controles.
+
+Feedbacks de revisão de missão distinguem conclusão (sucesso), releitura
+(aviso) e falha (erro), com fundos semânticos e toasts coloridos. Scanners de
+participação, atendimento e revisão exibem orientação para limpar as lentes
+antes da leitura. O shell usa layout flex sem enfeites sazonais nos três modos,
+com espaço inferior reservado ao botão central da navegação quando presente;
+o rodapé do scanner respeita a safe area do dispositivo.

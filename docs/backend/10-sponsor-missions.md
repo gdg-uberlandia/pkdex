@@ -38,7 +38,7 @@ Não há controles adicionais de fiscalização dessa confirmação.
 
 Sponsors entram diretamente em `/missions`, sem onboarding de participante.
 O menu contém validação e `/sponsor/account`, que apresenta a identidade, a
-empresa e a opção de sair. O scanner existente em `/missions/review/{missionId}`
+empresa, o seletor de tema e a opção de sair. O scanner existente em `/missions/review/{missionId}`
 é reaproveitado. Uma empresa indisponível deixa a lista vazia e mostra orientação
 para procurar a organização.
 
@@ -67,3 +67,7 @@ Com dois funcionários da empresa A e um da B, conferir listas e validações,
 abrir diretamente a URL de uma missão de outra empresa e tentar validar após
 alterar o vínculo, remover o papel ou desativar a empresa. Conferir também que
 releituras preservam operador, horário e XP e que a conta pode sair da aplicação.
+
+O bloqueio global de missões também impede confirmações por sponsors, inclusive
+com a câmera já aberta. Consulte
+[Bloqueio global de tags e missões](./11-activity-availability.md).

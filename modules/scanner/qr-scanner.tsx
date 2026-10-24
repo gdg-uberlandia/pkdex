@@ -165,12 +165,24 @@ export function QrScanner({ appUrl, eventId, mode }: QrScannerProps) {
                 duration: 5_000,
               })
             } else {
-              toast.info(`Missão “${result.missionTitle}” já estava validada`, {
-                description: "Nenhum XP adicional foi concedido.",
-                duration: 5_000,
-              })
+              toast.warning(
+                `Missão “${result.missionTitle}” já estava validada`,
+                {
+                  description: "Nenhum XP adicional foi concedido.",
+                  duration: 5_000,
+                }
+              )
             }
           }
+
+          if (!result.success)
+            toast.error("Não foi possível validar a missão", {
+              description:
+                result.code === "MISSIONS_DISABLED"
+                  ? "A organização pausou as conclusões de missões."
+                  : "Confira a mensagem na lista de missões e tente novamente.",
+              duration: 5_000,
+            })
 
           router.replace(`/missions?${query.toString()}`)
           return
@@ -310,7 +322,10 @@ export function QrScanner({ appUrl, eventId, mode }: QrScannerProps) {
   const FailureIcon = failure === "offline" ? WifiOff : CameraOff
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background">
+    <div className="flex h-full min-h-0 flex-1 flex-col bg-background">
+      <p className="shrink-0 border-b border-border bg-card px-4 py-2 text-center text-xs text-muted-foreground">
+        Antes de escanear, limpe as lentes da câmera para facilitar a leitura.
+      </p>
       <div className="relative min-h-0 flex-1 overflow-hidden bg-black">
         <video
           ref={videoRef}
@@ -472,7 +487,7 @@ export function QrScanner({ appUrl, eventId, mode }: QrScannerProps) {
 
       {status === "scanning" && (
         <div
-          className="shrink-0 space-y-1 border-t border-border bg-card px-6 py-4 text-center"
+          className="shrink-0 space-y-1 border-t border-border bg-card px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] text-center"
           aria-live="polite"
         >
           <p className="font-medium">Aponte para o QR Code</p>

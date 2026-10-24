@@ -8,6 +8,7 @@ import {
   findActiveCompanies,
   findCompanyById,
 } from "@/modules/companies/company.repository"
+import { findActivityAvailability } from "@/modules/event-activities/activity-availability.repository"
 import { findOrInitializeParticipantSummary } from "@/modules/participant-summary/participant-summary.repository"
 import {
   canReviewMission,
@@ -82,6 +83,7 @@ export type MissionOperationResult =
         | "FORBIDDEN"
         | "INVALID_EVENT"
         | "INVALID_QR"
+        | "MISSIONS_DISABLED"
         | "MISSION_INACTIVE"
         | "MISSION_NOT_FOUND"
         | "PREREQUISITE_MISSING"
@@ -102,12 +104,14 @@ export async function listMissionsForSession(
     return []
   }
 
-  const [missions, companies, initialProgress, summary] = await Promise.all([
-    findActiveMissions(profile.eventId),
-    findActiveCompanies(profile.eventId),
-    findMissionProgressByParticipant(profile.eventId, profile.userId),
-    findOrInitializeParticipantSummary(profile.eventId, profile.userId),
-  ])
+  const [missions, companies, initialProgress, summary, availability] =
+    await Promise.all([
+      findActiveMissions(profile.eventId),
+      findActiveCompanies(profile.eventId),
+      findMissionProgressByParticipant(profile.eventId, profile.userId),
+      findOrInitializeParticipantSummary(profile.eventId, profile.userId),
+      findActivityAvailability(profile.eventId),
+    ])
   const tags = missions.some(
     (mission) => mission.progressRequirement?.type === "tags"
   )
@@ -132,7 +136,9 @@ export async function listMissionsForSession(
   const completedMissionIds = new Set(
     initialProgress.completions.map((completion) => completion.activityId)
   )
-  const eligibleAutomaticMissions = missions.filter((mission) => {
+  const eligibleAutomaticMissions = (
+    availability.missionsEnabled ? missions : []
+  ).filter((mission) => {
     if (
       mission.validationType !== "automatic" ||
       !mission.progressRequirement ||
@@ -199,6 +205,11 @@ export async function listMissionsForSession(
               : (missionNames.get(prerequisite.activityId) ??
                 "Conclusão de outra missão"),
         }))
+    if (!availability.missionsEnabled && !completion)
+      blockedBy.push({
+        type: "progress",
+        label: "Missões temporariamente bloqueadas pela organização",
+      })
     const progressRequirement = mission.progressRequirement
 
     if (progressRequirement && !completion) {
@@ -291,11 +302,15 @@ export async function getMissionReviewContextForSession(session: Session) {
     sponsor && reviewer.sponsorCompanyId
       ? await findCompanyById(reviewer.eventId, reviewer.sponsorCompanyId)
       : null
+  const availability = await findActivityAvailability(reviewer.eventId)
   const missions =
-    sponsor && !company ? [] : await findReviewableMissions(reviewer.eventId)
+    !availability.missionsEnabled || (sponsor && !company)
+      ? []
+      : await findReviewableMissions(reviewer.eventId)
   return {
     sponsor,
     companyName: company?.name ?? null,
+    missionsEnabled: availability.missionsEnabled,
     missions: missions
       .filter((mission) => canReviewMission(reviewer, mission))
       .map((mission) => ({
@@ -445,6 +460,8 @@ function mapCompletionResult(
         missionImageUrl: result.mission.imageUrl,
         xpAwarded: result.completion.xpAwarded,
       }
+    case "disabled":
+      return { success: false, code: "MISSIONS_DISABLED" }
     case "inactive":
       return { success: false, code: "MISSION_INACTIVE" }
     case "forbidden":

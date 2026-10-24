@@ -22,6 +22,7 @@ export type DiscoverTagActionResult =
         | "INVALID_EVENT"
         | "INVALID_INPUT"
         | "PROFILE_INCOMPLETE"
+        | "TAGS_DISABLED"
         | "TAG_INACTIVE"
         | "TAG_NOT_FOUND"
         | "UNEXPECTED_ERROR"

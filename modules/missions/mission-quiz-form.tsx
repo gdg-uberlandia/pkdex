@@ -75,6 +75,10 @@ export function MissionQuizForm({
                       ? "Conclua os pré-requisitos desta missão."
                       : "Não foi possível enviar o quiz. Confira as respostas e tente novamente."
             )
+            if (result.code === "MISSIONS_DISABLED") {
+              setMessage("A organização pausou as conclusões de missões.")
+              router.refresh()
+            }
             if (result.code === "ATTEMPTS_EXHAUSTED") setFinished(true)
             if (result.code === "QUIZ_CHANGED") {
               setFinished(true)

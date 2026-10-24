@@ -198,3 +198,17 @@ it("does not complete all tags when the catalog is empty", async () => {
     })
   ).toBe(0)
 })
+
+it("pauses automatic completions and resumes after the global block is removed", async () => {
+  mock.documents.set("eventOperations/event-1", {
+    eventId: "event-1",
+    missionsEnabled: false,
+  })
+  expect(await completeEligibleAutomaticMissions(input)).toBe(0)
+  expect(mock.documents.get("profiles/user-1")).toMatchObject({ xp: 10 })
+  mock.documents.set("eventOperations/event-1", {
+    eventId: "event-1",
+    missionsEnabled: true,
+  })
+  expect(await completeEligibleAutomaticMissions(input)).toBe(1)
+})
