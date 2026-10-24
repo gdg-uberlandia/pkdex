@@ -257,3 +257,15 @@ describe("quiz completion transaction", () => {
     ).toBe("profile-unavailable")
   })
 })
+
+it("does not consume attempts or award XP while missions are paused", async () => {
+  mock.documents.set("eventOperations/event-1", {
+    eventId: "event-1",
+    missionsEnabled: false,
+  })
+  expect(
+    (await completeMission({ ...input, answers: correctAnswers })).status
+  ).toBe("disabled")
+  expect(mock.documents.has(`missionAttempts/${id}`)).toBe(false)
+  expect(mock.documents.has(`activityCompletions/${id}`)).toBe(false)
+})

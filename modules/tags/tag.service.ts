@@ -4,6 +4,7 @@ import type { Session } from "next-auth"
 
 import { SCORES } from "@/config/scores"
 import { env } from "@/env"
+import { findActivityAvailability } from "@/modules/event-activities/activity-availability.repository"
 import { requireProfileForSession } from "@/modules/profile/profile.service"
 
 import {
@@ -27,6 +28,7 @@ export type TagDiscoveryOperationResult =
       code:
         | "INVALID_EVENT"
         | "PROFILE_INCOMPLETE"
+        | "TAGS_DISABLED"
         | "TAG_INACTIVE"
         | "TAG_NOT_FOUND"
     }>
@@ -48,6 +50,7 @@ export type TagCollectionItem =
 
 export type TagCollection = Readonly<{
   discoveredCount: number
+  discoveryEnabled: boolean
   totalCount: number
   items: TagCollectionItem[]
 }>
@@ -56,9 +59,10 @@ export async function listTagsForSession(
   session: Session
 ): Promise<TagCollection> {
   const profile = await requireProfileForSession(session)
-  const [tags, discoveries] = await Promise.all([
+  const [tags, discoveries, availability] = await Promise.all([
     findActiveTags(profile.eventId),
     findTagDiscoveriesByParticipant(profile.eventId, profile.userId),
+    findActivityAvailability(profile.eventId),
   ])
   const discoveriesByTag = new Map(
     discoveries.map((discovery) => [discovery.activityId, discovery])
@@ -86,6 +90,7 @@ export async function listTagsForSession(
     discoveredCount: items.filter((item) => item.status === "discovered")
       .length,
     totalCount: items.length,
+    discoveryEnabled: availability.tagsEnabled,
     items,
   }
 }
@@ -131,6 +136,8 @@ export async function discoverTagForSession(
         imageUrl: result.tag.imageUrl,
         xpAwarded: result.discovery.xpAwarded,
       }
+    case "disabled":
+      return { success: false, code: "TAGS_DISABLED" }
     case "inactive":
       return { success: false, code: "TAG_INACTIVE" }
     case "not-found":

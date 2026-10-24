@@ -9,6 +9,7 @@ import * as z from "zod"
 import { CACHE_SECONDS, CACHE_TAGS } from "@/config/cache"
 import { firestore } from "@/lib/firebase/admin"
 import { getFirestoreCollectionName } from "@/lib/firebase/firestore-collection"
+import { readActivityAvailability } from "@/modules/event-activities/activity-availability.repository"
 import {
   getParticipantSummaryRef,
   incrementParticipantSummary,
@@ -86,6 +87,7 @@ export type CompleteMissionResult =
     }>
   | Readonly<{
       status:
+        | "disabled"
         | "forbidden"
         | "quiz-not-passed"
         | "invalid-answers"
@@ -496,6 +498,12 @@ export async function completeMission({
       }
     }
 
+    if (
+      !(await readActivityAvailability(transaction, validatedEventId))
+        .missionsEnabled
+    )
+      return { status: "disabled" }
+
     if (attemptSnapshot.data()?.outcome === "failed") {
       return {
         status: "attempts-exhausted",
@@ -736,6 +744,12 @@ export async function completeEligibleAutomaticMissions({
   )
 
   return firestore.runTransaction(async (transaction) => {
+    if (
+      !(await readActivityAvailability(transaction, validatedEventId))
+        .missionsEnabled
+    )
+      return 0
+
     const [profileSnapshot, summarySnapshot, ...completionSnapshots] =
       await Promise.all([
         transaction.get(profileRef),

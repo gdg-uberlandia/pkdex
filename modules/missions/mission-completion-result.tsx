@@ -56,6 +56,11 @@ const errors: Record<
     title: "QR Code inválido",
     description: "Não foi possível validar este código.",
   },
+  MISSIONS_DISABLED: {
+    title: "Missões temporariamente bloqueadas",
+    description:
+      "A organização pausou as conclusões de missões. Tente novamente quando forem liberadas.",
+  },
   MISSION_INACTIVE: {
     title: "Missão indisponível",
     description: "Esta missão não pode ser concluída neste momento.",

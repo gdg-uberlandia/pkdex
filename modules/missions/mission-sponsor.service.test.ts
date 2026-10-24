@@ -2,40 +2,50 @@ import type { Session } from "next-auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 const mocks = vi.hoisted(() => ({
   profile: vi.fn(),
+  availability: vi.fn(),
   company: vi.fn(),
   missions: vi.fn(),
+  activeMissions: vi.fn(),
+  progress: vi.fn(),
+  summary: vi.fn(),
+  automatic: vi.fn(),
+  attempts: vi.fn(),
   complete: vi.fn(),
   participant: vi.fn(),
   token: vi.fn(),
 }))
 vi.mock("server-only", () => ({}))
+vi.mock("@/modules/event-activities/activity-availability.repository", () => ({
+  findActivityAvailability: mocks.availability,
+}))
 vi.mock("@/env", () => ({ env: { EVENT_ID: "event" } }))
 vi.mock("@/modules/profile/profile.service", () => ({
   requireProfileForSession: mocks.profile,
   getProfileByPublicQrId: mocks.participant,
 }))
 vi.mock("@/modules/companies/company.repository", () => ({
-  findActiveCompanies: vi.fn(),
+  findActiveCompanies: vi.fn().mockResolvedValue([]),
   findCompanyById: mocks.company,
 }))
 vi.mock("@/modules/tags/tag.repository", () => ({ findActiveTags: vi.fn() }))
 vi.mock("@/modules/participant-summary/participant-summary.repository", () => ({
-  findOrInitializeParticipantSummary: vi.fn(),
+  findOrInitializeParticipantSummary: mocks.summary,
 }))
 vi.mock("@/modules/qr-code/user-qr-token", () => ({
   validateUserQrToken: mocks.token,
 }))
 vi.mock("./mission.repository", () => ({
-  findActiveMissions: vi.fn(),
+  findActiveMissions: mocks.activeMissions,
   findReviewableMissions: mocks.missions,
   completeMission: mocks.complete,
-  completeEligibleAutomaticMissions: vi.fn(),
-  findMissionAttemptsByParticipant: vi.fn(),
-  findMissionProgressByParticipant: vi.fn(),
+  completeEligibleAutomaticMissions: mocks.automatic,
+  findMissionAttemptsByParticipant: mocks.attempts,
+  findMissionProgressByParticipant: mocks.progress,
   findSharedInterestConnectionCount: vi.fn(),
 }))
 import {
   getMissionReviewContextForSession,
+  listMissionsForSession,
   listReviewableMissionsForSession,
   reviewMissionForSession,
 } from "./mission.service"
@@ -52,6 +62,10 @@ const mission = {
 }
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.availability.mockResolvedValue({
+    tagsEnabled: true,
+    missionsEnabled: true,
+  })
   mocks.profile.mockResolvedValue({
     userId: "employee",
     eventId: "event",
@@ -130,4 +144,54 @@ describe("sponsor review service", () => {
     )
     expect(result).toEqual({ success: false, code: "FORBIDDEN" })
   })
+})
+
+it("hides review links while the organization has paused missions", async () => {
+  mocks.availability.mockResolvedValue({
+    tagsEnabled: true,
+    missionsEnabled: false,
+  })
+  expect(await getMissionReviewContextForSession(session)).toMatchObject({
+    missionsEnabled: false,
+    missions: [],
+  })
+  expect(mocks.missions).not.toHaveBeenCalled()
+})
+
+it("marks pending participant missions blocked while preserving completed missions", async () => {
+  mocks.profile.mockResolvedValue({
+    userId: "participant",
+    eventId: "event",
+    accessRoles: ["participant"],
+  })
+  mocks.availability.mockResolvedValue({
+    tagsEnabled: true,
+    missionsEnabled: false,
+  })
+  mocks.activeMissions.mockResolvedValue([
+    { ...mission, prerequisites: [] },
+    { ...mission, id: "done", prerequisites: [] },
+  ])
+  mocks.progress.mockResolvedValue({
+    completions: [
+      { activityId: "done", xpAwarded: 50, completedAt: new Date() },
+    ],
+    activityKeys: new Set(),
+  })
+  mocks.summary.mockResolvedValue({
+    connectionsCount: 0,
+    tagsDiscoveredCount: 0,
+    companiesVisitedCount: 0,
+  })
+  mocks.attempts.mockResolvedValue(new Map())
+  mocks.automatic.mockResolvedValue(0)
+  const items = await listMissionsForSession(session)
+  expect(items.map(({ status }) => status)).toEqual(["blocked", "completed"])
+  expect(items[0].blockedBy).toContainEqual({
+    type: "progress",
+    label: "Missões temporariamente bloqueadas pela organização",
+  })
+  expect(mocks.automatic).toHaveBeenCalledWith(
+    expect.objectContaining({ missions: [] })
+  )
 })

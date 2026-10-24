@@ -70,6 +70,16 @@ export default async function TagsPage() {
         </p>
       </section>
 
+      {!collection.discoveryEnabled && (
+        <p
+          role="status"
+          className="rounded-xl bg-warning/15 p-4 text-sm text-warning"
+        >
+          A organização pausou novas descobertas de tags. Sua coleção continua
+          disponível.
+        </p>
+      )}
+
       <section className="space-y-2" aria-label="Progresso da coleção">
         <div className="flex items-center justify-between gap-3 text-sm">
           <p className="font-medium">Sua coleção</p>

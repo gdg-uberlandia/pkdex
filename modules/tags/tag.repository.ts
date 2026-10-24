@@ -9,6 +9,7 @@ import * as z from "zod"
 import { CACHE_SECONDS, CACHE_TAGS } from "@/config/cache"
 import { firestore } from "@/lib/firebase/admin"
 import { getFirestoreCollectionName } from "@/lib/firebase/firestore-collection"
+import { readActivityAvailability } from "@/modules/event-activities/activity-availability.repository"
 import { incrementParticipantSummary } from "@/modules/participant-summary/participant-summary.repository"
 import { accessRolesSchema } from "@/modules/profile/profile.schema"
 
@@ -56,7 +57,7 @@ export type CompleteTagDiscoveryResult =
       discovery: TagDiscovery
     }>
   | Readonly<{
-      status: "not-found" | "inactive" | "profile-unavailable"
+      status: "not-found" | "inactive" | "disabled" | "profile-unavailable"
     }>
 
 type CachedTag = Omit<Tag, "createdAt" | "updatedAt"> &
@@ -263,6 +264,11 @@ export async function completeTagDiscovery({
         discovery,
       }
     }
+
+    if (
+      !(await readActivityAvailability(transaction, target.eventId)).tagsEnabled
+    )
+      return { status: "disabled" }
 
     const now = Timestamp.now()
     const xpAwarded = tag.xpAwarded ?? validatedDefaultXp

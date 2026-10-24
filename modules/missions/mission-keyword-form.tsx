@@ -70,6 +70,10 @@ export function MissionKeywordForm({
                     ? "Conclua os pré-requisitos desta missão."
                     : "Não foi possível concluir. Tente novamente."
             )
+            if (result.code === "MISSIONS_DISABLED") {
+              setMessage("A organização pausou as conclusões de missões.")
+              router.refresh()
+            }
             if (result.code === "ATTEMPTS_EXHAUSTED") setFinished(true)
           }
         } catch {

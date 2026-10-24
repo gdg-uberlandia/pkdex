@@ -229,3 +229,30 @@ it("refreshes review assignments and active state without using the catalog cach
   change("missions/activation", { active: false })
   expect(await findReviewableMissions("event")).toEqual([])
 })
+
+it("blocks new onsite and QR completions while missions are paused", async () => {
+  mock.documents.set("eventOperations/event", {
+    eventId: "event",
+    missionsEnabled: false,
+  })
+  expect((await completeMission(input)).status).toBe("disabled")
+  const qrId = "c35d5cf6-a3f4-4ae0-9e6f-0bad73cdded6"
+  change("missions/activation", { validationType: "qr", qrId })
+  expect(
+    (await completeMission({ ...input, validationType: "qr", qrId })).status
+  ).toBe("disabled")
+  expect(mock.documents.get("profiles/participant")).toMatchObject({ xp: 0 })
+  expect(mock.increments).not.toHaveBeenCalled()
+})
+it("preserves existing completion receipts during a global pause", async () => {
+  expect((await completeMission(input)).status).toBe("completed")
+  const receipt = mock.documents.get(`activityCompletions/${completionId}`)
+  mock.documents.set("eventOperations/event", {
+    eventId: "event",
+    missionsEnabled: false,
+  })
+  expect((await completeMission(input)).status).toBe("already-completed")
+  expect(mock.documents.get(`activityCompletions/${completionId}`)).toEqual(
+    receipt
+  )
+})

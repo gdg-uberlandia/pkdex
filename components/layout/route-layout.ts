@@ -204,3 +204,11 @@ export function getRouteLayout(
 
   return { ...routeLayout, backHref }
 }
+
+export function isScannerRoute(pathname: string) {
+  return (
+    pathname === "/scan" ||
+    pathname === "/operations/scan" ||
+    pathname.startsWith("/missions/review/")
+  )
+}

@@ -5,6 +5,7 @@ import type { ReactNode } from "react"
 
 import { Toaster } from "@/components/ui/sonner"
 import { IS_HALLOWEEN } from "@/config/seasonal-theme"
+import { cn } from "@/lib/utils"
 import { NoticeBell } from "@/modules/notices/notice-bell"
 import type { AccessRole } from "@/modules/profile/profile.schema"
 import halloweenStyles from "@/modules/seasonal-theme/halloween.module.css"
@@ -17,7 +18,7 @@ import {
 import { AppHeader } from "./app-header"
 import { AppShell } from "./app-shell"
 import { BottomNavigation } from "./bottom-navigation"
-import { getRouteLayout } from "./route-layout"
+import { getRouteLayout, isScannerRoute } from "./route-layout"
 
 export function AuthenticatedAppShell({
   children,
@@ -31,12 +32,18 @@ export function AuthenticatedAppShell({
     accessRoles
   )
 
+  const scanner = isScannerRoute(pathname)
+
   return (
     <>
-      <Toaster position="top-center" />
+      <Toaster position="top-center" richColors />
       <AppShell
         className={IS_HALLOWEEN ? halloweenStyles.shell : undefined}
-        contentClassName={IS_HALLOWEEN ? halloweenStyles.content : undefined}
+        contentClassName={cn(
+          IS_HALLOWEEN && halloweenStyles.content,
+          scanner && "flex flex-col overflow-hidden",
+          scanner && routeLayout.showNavigation && "pb-8"
+        )}
         header={
           routeLayout.showHeader ? (
             <AppHeader
@@ -58,9 +65,9 @@ export function AuthenticatedAppShell({
         }
         theme={routeLayout.theme}
       >
-        {!pathname.includes("/scan") && <SeasonalPageDecorations />}
+        {!scanner && <SeasonalPageDecorations />}
         {children}
-        {!pathname.includes("/scan") && <SeasonalPageFooter />}
+        {!scanner && <SeasonalPageFooter />}
       </AppShell>
     </>
   )

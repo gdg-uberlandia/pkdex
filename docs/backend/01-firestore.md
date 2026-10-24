@@ -550,3 +550,10 @@ Perfis possuem exatamente uma role. `profiles.sponsorCompanyId` e
 `missions.companyId` vinculam funcionários e missões à empresa; campos ausentes
 equivalem a `null`. A autorização e os registros de confirmação estão descritos
 em [Validação de missões por empresas](./10-sponsor-missions.md).
+
+## Disponibilidade global de atividades
+
+`eventOperations` também armazena `tagsEnabled` e `missionsEnabled`, ambos
+habilitados por padrão. Os controles do perfil admin e as verificações dentro
+das transações estão descritos em
+[Bloqueio global de tags e missões](./11-activity-availability.md).
