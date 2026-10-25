@@ -19,6 +19,18 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   minute: "2-digit",
 })
 
+const rewardTicketReference = [
+  { name: "Doce", tickets: 3 },
+  { name: "Caneta", tickets: 7 },
+  { name: "Bloco de notas", tickets: 8 },
+  { name: "Chaveiro", tickets: 10 },
+  { name: "Copo", tickets: 10 },
+  { name: "Caderno", tickets: 11 },
+  { name: "Garrafa", tickets: 12 },
+  { name: "Kit de bloco + caneta", tickets: 13 },
+  { name: "Camiseta", tickets: 20 },
+] as const
+
 export default async function TicketsPage() {
   const session = await requireAuth()
   const tickets = await getTicketsForSession(session)
@@ -85,6 +97,34 @@ export default async function TicketsPage() {
             idempotencyKey={conversionIdempotencyKey}
           />
         )}
+      </section>
+
+      <section
+        aria-labelledby="reward-ticket-reference-title"
+        className="space-y-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10"
+      >
+        <div>
+          <h2 id="reward-ticket-reference-title" className="font-semibold">
+            Quanto vale cada brinde?
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            Use estes valores como referência para planejar suas trocas na
+            lojinha. Os resgates dependem da disponibilidade dos brindes.
+          </p>
+        </div>
+        <dl className="divide-y divide-border">
+          {rewardTicketReference.map((reward) => (
+            <div
+              key={reward.name}
+              className="flex items-center justify-between gap-4 py-2.5 text-sm"
+            >
+              <dt>{reward.name}</dt>
+              <dd className="shrink-0 font-semibold text-gamification tabular-nums">
+                {reward.tickets} tickets
+              </dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       <section className="space-y-3">

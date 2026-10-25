@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 
+import { SignOutButton } from "@/components/auth/sign-out-button"
 import { ThemePreferences } from "@/components/theme/theme-preferences"
-import { Button } from "@/components/ui/button"
 import { requireAuth } from "@/lib/require-auth"
 import { signOutCurrentUser } from "@/modules/auth/auth.actions"
 import { findCompanyById } from "@/modules/companies/company.repository"
@@ -25,9 +25,7 @@ export default async function SponsorAccountPage() {
       </p>
       <ThemePreferences />
       <form action={signOutCurrentUser}>
-        <Button variant="outline" type="submit">
-          Sair
-        </Button>
+        <SignOutButton className="w-full" />
       </form>
     </div>
   )
