@@ -33,6 +33,7 @@ const formatLabels = {
   talk: "Palestra",
   panel: "Painel",
   keynote: "Keynote",
+  workshop: "Workshop",
 } as const
 
 export default async function TalkDetailsPage({

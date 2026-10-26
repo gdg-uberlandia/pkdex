@@ -34,26 +34,29 @@ describe("talk schemas", () => {
     expect(speaker).not.toHaveProperty("evaluationStatus")
   })
 
-  it("accepts a panel with multiple speakers and manual evaluation state", () => {
-    const talk = talkFieldsSchema.parse({
-      id: "panel-a",
-      eventId: "devfest-2026",
-      title: "The future of software",
-      description: "A conversation about the next generation of software.",
-      category: "Community",
-      format: "panel",
-      speakerIds: ["speaker-a", "speaker-b", "speaker-c"],
-      evaluationStatus: "locked",
-      isActive: true,
-      createdAt: NOW,
-      updatedAt: NOW,
-    })
+  it.each(["panel", "workshop"] as const)(
+    "accepts %s with multiple speakers and manual evaluation state",
+    (format) => {
+      const talk = talkFieldsSchema.parse({
+        id: "panel-a",
+        eventId: "devfest-2026",
+        title: "The future of software",
+        description: "A conversation about the next generation of software.",
+        category: "Community",
+        format,
+        speakerIds: ["speaker-a", "speaker-b", "speaker-c"],
+        evaluationStatus: "locked",
+        isActive: true,
+        createdAt: NOW,
+        updatedAt: NOW,
+      })
 
-    expect(talk).toMatchObject({
-      format: "panel",
-      evaluationStatus: "locked",
-    })
-  })
+      expect(talk).toMatchObject({
+        format,
+        evaluationStatus: "locked",
+      })
+    }
+  )
 
   it("rejects duplicated speakers in the same talk", () => {
     const result = talkFieldsSchema.safeParse({
