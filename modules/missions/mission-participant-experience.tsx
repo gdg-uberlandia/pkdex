@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   ChevronRight,
   CircleDot,
+  ExternalLink,
   LockKeyhole,
   QrCode,
   Sparkles,
@@ -429,6 +430,23 @@ function MissionDialog({
               </p>
             </div>
           </div>
+
+          {mission.validationType === "reviewer" && mission.externalUrl && (
+            <Button
+              className="w-full"
+              render={
+                <a
+                  href={mission.externalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              }
+              nativeButton={false}
+            >
+              <ExternalLink aria-hidden="true" />
+              Acessar atividade
+            </Button>
+          )}
 
           {mission.status === "failed" && (
             <div
