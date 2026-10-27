@@ -79,3 +79,42 @@ it.each(["companies", "tags"] as const)("accepts all %s", (type) => {
     }).success
   ).toBe(true)
 })
+
+describe("reviewer activity links", () => {
+  const reviewer = { ...baseMission, validationType: "reviewer", qrId: null }
+
+  it("keeps legacy missions valid and preserves optional links", () => {
+    expect(missionFieldsSchema.parse(reviewer).externalUrl).toBeUndefined()
+    expect(
+      missionFieldsSchema.parse({ ...reviewer, externalUrl: null }).externalUrl
+    ).toBeNull()
+    expect(
+      missionFieldsSchema.parse({
+        ...reviewer,
+        externalUrl: "https://example.com/activity",
+      }).externalUrl
+    ).toBe("https://example.com/activity")
+  })
+
+  it.each([
+    "javascript:alert(1)",
+    "data:text/html,test",
+    "ftp://example.com/file",
+    "invalid",
+  ])("rejects unsafe or invalid links: %s", (externalUrl) => {
+    expect(
+      missionFieldsSchema.safeParse({ ...reviewer, externalUrl }).success
+    ).toBe(false)
+  })
+
+  it("rejects activity links on other mission types", () => {
+    expect(
+      missionFieldsSchema.safeParse({
+        ...reviewer,
+        validationType: "qr",
+        qrId: "c35d5cf6-a3f4-4ae0-9e6f-0bad73cdded6",
+        externalUrl: "https://example.com/activity",
+      }).success
+    ).toBe(false)
+  })
+})
