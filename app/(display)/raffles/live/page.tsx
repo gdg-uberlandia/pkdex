@@ -1,12 +1,10 @@
 import { CheckCircle2, Dices, FlaskConical, Trophy } from "lucide-react"
 import type { Metadata } from "next"
 import Image from "next/image"
-import { notFound } from "next/navigation"
 
 import { getFirestoreCollectionName } from "@/lib/firebase/firestore-collection"
-import { requireAuth } from "@/lib/require-auth"
 import { cn } from "@/lib/utils"
-import { getRaffleLiveForSession } from "@/modules/raffles/raffle.service"
+import { getPublicRaffleDisplay } from "@/modules/raffles/raffle-display.service"
 import { RaffleLiveRefresh } from "@/modules/raffles/raffle-live-refresh"
 
 export const metadata: Metadata = {
@@ -16,12 +14,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function RaffleLivePage() {
-  const session = await requireAuth()
-  const operations = await getRaffleLiveForSession(session)
-
-  if (!operations) {
-    notFound()
-  }
+  const operations = await getPublicRaffleDisplay()
 
   const simulation = operations.simulation
   const raffles = simulation?.raffles ?? operations.raffles
@@ -48,7 +41,7 @@ export default async function RaffleLivePage() {
     closureStatus !== "closed"
       ? "preparing"
       : currentCandidate
-        ? `candidate:${currentCandidate.id}:${currentCandidate.currentAttemptId}`
+        ? `candidate:${currentCandidate.id}:${currentCandidate.revision}`
         : latestWinner
           ? `winner:${latestWinner.id}:${latestWinner.drawnAt?.getTime()}`
           : pendingRaffle || !hasRaffles
