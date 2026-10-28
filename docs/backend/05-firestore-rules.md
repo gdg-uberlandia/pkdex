@@ -55,7 +55,8 @@ da projeção.
 
 ## Sinal em tempo real do telão
 
-O telão observa somente o documento `raffleLiveSignals/{eventId}`. Esse
+O telão observa somente o documento `raffleLiveSignals/{eventId}` em produção
+e `test_raffleLiveSignals/{eventId}` quando `DEVMODE=true`. Esse
 documento não contém participante, candidato ou vencedor: ele informa apenas a
 fase (`drawing` ou `updated`), o nome público do prêmio durante o processamento
 e `updatedAt`. Ao receber `updated`, a página solicita ao servidor a fotografia
@@ -81,6 +82,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /test_raffleLiveSignals/{eventId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
@@ -90,12 +96,15 @@ service cloud.firestore {
 
 O bloqueio recursivo não anula a exceção: quando mais de uma regra corresponde
 ao mesmo documento, o Firestore autoriza a operação se pelo menos uma condição
-permitir. Dessa forma, somente `raffleLiveSignals` pode ser lida pelo cliente e
+permitir. Dessa forma, somente `raffleLiveSignals` e `test_raffleLiveSignals` podem ser lidas pelo cliente e
 nenhuma coleção pode ser escrita pelo Client SDK.
 
 O Firebase Admin SDK usado pelo backend ignora as Firestore Rules. Ele continua
-responsável por publicar o sinal e por consultar os dados protegidos depois de
-validar a sessão e as permissões da aplicação.
+responsável por publicar o sinal e por validar sessão e permissões nas operações
+administrativas. O telão `/raffles/live` pode ser aberto sem sessão; seu serviço
+público consulta o evento configurado na implantação e retorna somente uma
+projeção dos dados apresentados na tela. As coleções completas permanecem
+inacessíveis pelo Client SDK.
 
 Não libere leitura direta de `raffles`, `raffleAttempts`, `raffleWinners` ou
 `raffleEntryChunks`. Esses documentos continuam protegidos e são consultados

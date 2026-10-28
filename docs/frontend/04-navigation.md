@@ -131,3 +131,18 @@ identidade visual e exibe a ação de conteúdo em largura completa.
 A tela inicial oferece um ícone de calendário com rótulo acessível
 “Ver programação”, ao lado das notificações, para abrir `/schedule`.
 A programação usa header com retorno para `/home` e não exibe navegação inferior.
+
+## Telão público do sorteio
+
+A rota `/raffles/live` abre sem login e usa o `EVENT_ID` da implantação. O serviço
+`getPublicRaffleDisplay` retorna somente o estado de preparação, os nomes dos
+prêmios, o candidato em confirmação, os vencedores confirmados e os marcadores
+necessários à apresentação. Não retorna IDs de participantes, pesos de tickets,
+operadores nem dados administrativos da simulação. Quando houver simulação ativa,
+o telão continua identificando esse modo e exibindo seus resultados.
+
+A página mantém `noindex` e a atualização ao vivo pelo sinal público
+`raffleLiveSignals`. Os nomes apresentados no telão ficam acessíveis a qualquer
+pessoa com o link. A abertura dessa rota não libera ações administrativas:
+sortear, confirmar, refazer e preparar sorteios continuam exigindo sessão e a
+permissão `manage-event-operations`.
