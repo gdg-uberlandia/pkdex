@@ -17,7 +17,7 @@ const AREA_INTERESTS = [
   { id: "frontend", label: "Frontend" },
   { id: "backend", label: "Backend" },
   { id: "devops", label: "DevOps e SRE" },
-  { id: "testing", label: "Testes e qualidade" },
+  { id: "testing", label: "QA (Testes e qualidade)" },
   { id: "architecture", label: "Arquitetura de software" },
   { id: "databases", label: "Bancos de dados" },
   { id: "generative-ai", label: "IA generativa" },
