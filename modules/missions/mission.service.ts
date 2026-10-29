@@ -45,6 +45,7 @@ export type MissionListItem = Readonly<{
   description: string
   imageUrl: string | null
   externalUrl?: string | null
+  externalLinks?: Array<{ label: string; url: string }>
   validationType: "qr" | "reviewer" | "automatic" | "keyword" | "quiz"
   status: "available" | "blocked" | "completed" | "failed"
   xpAwarded: number
@@ -260,10 +261,12 @@ export async function listMissionsForSession(
       title: mission.title,
       description: mission.description,
       imageUrl: mission.imageUrl,
-      externalUrl:
-        mission.validationType === "reviewer"
-          ? (mission.externalUrl ?? null)
-          : null,
+      externalUrl: mission.externalUrl ?? null,
+      externalLinks:
+        mission.externalLinks ??
+        (mission.externalUrl
+          ? [{ label: "Acessar atividade", url: mission.externalUrl }]
+          : []),
       validationType: mission.validationType,
       ...(mission.quizConfig
         ? {

@@ -358,14 +358,25 @@ try {
     const expected = docs.find(
       ({ ref }) => ref.id === `${runId}-0` && ref.parent.id === "test_profiles"
     )?.data.qrId
-    const path = qr?.value ? new URL(qr.value).pathname : ""
+    const code = qr?.value
+      ? new URL(qr.value).pathname.match(/^\/q\/([A-Za-z0-9_-]{22})$/)?.[1]
+      : null
+    const reference = code
+      ? collection("userQrReferences").doc(
+          createHash("sha256").update(code).digest("hex")
+        )
+      : null
+    const storedReference = reference ? await reference.get() : null
     if (
       probe.status !== 200 ||
-      path !== `/qr/${encodeURIComponent(eventId)}/user/${expected}`
+      !expected ||
+      storedReference?.data()?.qrId !== expected ||
+      storedReference?.data()?.eventId !== eventId
     )
       throw new Error(
         "Preview did not return the QR of the seeded test profile; load cancelled"
       )
+    if (reference) docs.push({ ref: reference, data: storedReference.data() })
     report.remoteSeedVerified = true
   }
   const smoke = await measure("/home", 0)

@@ -1,5 +1,7 @@
 import * as z from "zod"
 
+import { buildStaticQrPath } from "@/scripts/lib/static-qr-code.mjs"
+
 export const QR_CODE_TYPES = ["user", "company", "mission", "tag"] as const
 export const MAX_QR_CODE_URL_LENGTH = 4_096
 export const MAX_QR_CODE_TOKEN_LENGTH = 2_048
@@ -51,123 +53,56 @@ type QrCodeUrlConfig = Readonly<{
   eventId: string
 }>
 
-function decodePathSegment(segment: string) {
-  try {
-    return decodeURIComponent(segment)
-  } catch {
-    return null
-  }
-}
-
 export function parseQrCodeUrl(
   input: unknown,
   config: QrCodeUrlConfig
 ): ParseQrCodeUrlResult {
-  if (typeof input !== "string") {
+  if (
+    typeof input !== "string" ||
+    !input.trim() ||
+    input.length > MAX_QR_CODE_URL_LENGTH
+  )
     return { valid: false, code: "INVALID_QR" }
-  }
-
-  const value = input.trim()
-
-  if (!value || value.length > MAX_QR_CODE_URL_LENGTH) {
-    return { valid: false, code: "INVALID_QR" }
-  }
-
   try {
-    const url = new URL(value)
-    const appOrigin = new URL(config.appUrl).origin
-
+    const url = new URL(input.trim())
     if (
-      (url.protocol !== "http:" && url.protocol !== "https:") ||
-      url.origin !== appOrigin ||
+      !["http:", "https:"].includes(url.protocol) ||
+      url.origin !== new URL(config.appUrl).origin ||
       url.username ||
       url.password ||
       url.hash
-    ) {
+    )
       return { valid: false, code: "INVALID_ORIGIN" }
-    }
-
-    const pathSegments = url.pathname.split("/")
-
-    if (
-      pathSegments.length !== 5 ||
-      pathSegments[0] !== "" ||
-      pathSegments[1] !== "qr"
-    ) {
-      return { valid: false, code: "INVALID_QR" }
-    }
-
-    const eventId = decodePathSegment(pathSegments[2])
-    const type = decodePathSegment(pathSegments[3])
-    const qrId = decodePathSegment(pathSegments[4])
-
-    if (!eventId || !type || !qrId) {
-      return { valid: false, code: "INVALID_QR" }
-    }
-
-    if (eventId !== config.eventId) {
-      return { valid: false, code: "INVALID_EVENT" }
-    }
-
-    const typeResult = qrCodeTypeSchema.safeParse(type)
-
-    if (!typeResult.success) {
-      return { valid: false, code: "UNSUPPORTED_QR_TYPE" }
-    }
-
-    const queryKeys = [...url.searchParams.keys()]
-
-    if (typeResult.data === "user") {
-      const tokens = url.searchParams.getAll("token")
-
-      if (tokens.length !== 1 || !tokens[0]) {
-        return { valid: false, code: "MISSING_TOKEN" }
-      }
-
-      if (queryKeys.length !== 1 || queryKeys[0] !== "token") {
-        return { valid: false, code: "INVALID_QR" }
-      }
-
-      const targetResult = userQrCodeTargetSchema.safeParse({
-        eventId,
-        type: typeResult.data,
-        qrId,
-        token: tokens[0],
-      })
-
-      return targetResult.success
-        ? { valid: true, target: targetResult.data }
-        : { valid: false, code: "INVALID_QR" }
-    }
-
-    if (queryKeys.length > 0) {
-      return { valid: false, code: "INVALID_QR" }
-    }
-
-    const targetResult = staticQrCodeTargetSchema.safeParse({
-      eventId,
-      type: typeResult.data,
+    const match = /^\/q\/([cmt])([A-Za-z0-9_-]{21}[AQgw])$/.exec(url.pathname)
+    if (!match || url.search) return { valid: false, code: "INVALID_QR" }
+    const bytes = atob(
+      match[2].replaceAll("-", "+").replaceAll("_", "/") + "=="
+    )
+    const hex = Array.from(bytes, (byte) =>
+      byte.charCodeAt(0).toString(16).padStart(2, "0")
+    ).join("")
+    const qrId = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+    const types = { c: "company", m: "mission", t: "tag" } as const
+    const target = staticQrCodeTargetSchema.safeParse({
+      eventId: config.eventId,
+      type: types[match[1] as keyof typeof types],
       qrId,
     })
-
-    return targetResult.success
-      ? { valid: true, target: targetResult.data }
+    return target.success
+      ? { valid: true, target: target.data }
       : { valid: false, code: "INVALID_QR" }
   } catch {
     return { valid: false, code: "INVALID_QR" }
   }
 }
 
-export function buildQrCodeUrl(target: QrCodeTarget, appUrl: string): string {
-  const validatedTarget = qrCodeTargetSchema.parse(target)
-  const url = new URL(
-    `/qr/${encodeURIComponent(validatedTarget.eventId)}/${validatedTarget.type}/${validatedTarget.qrId}`,
+export function buildQrCodeUrl(
+  target: Exclude<QrCodeTarget, { type: "user" }>,
+  appUrl: string
+): string {
+  const validated = staticQrCodeTargetSchema.parse(target)
+  return new URL(
+    buildStaticQrPath(validated.type, validated.qrId),
     appUrl
-  )
-
-  if (validatedTarget.type === "user") {
-    url.searchParams.set("token", validatedTarget.token)
-  }
-
-  return url.toString()
+  ).toString()
 }

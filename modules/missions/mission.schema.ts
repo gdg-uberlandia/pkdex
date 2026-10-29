@@ -52,6 +52,15 @@ export const missionPrerequisiteSchema = z.discriminatedUnion("type", [
     .strict(),
 ])
 
+export const missionLinkSchema = z
+  .object({
+    label: z.string().trim().min(1).max(60),
+    url: z.url().refine((value) => /^https?:\/\//i.test(value), {
+      message: "Use an HTTP or HTTPS URL",
+    }),
+  })
+  .strict()
+
 export const missionFieldsSchema = z
   .object({
     id: z.string().trim().min(1).max(128),
@@ -75,6 +84,7 @@ export const missionFieldsSchema = z
       })
       .nullable()
       .optional(),
+    externalLinks: z.array(missionLinkSchema).max(3).optional(),
     validationType: missionValidationTypeSchema,
     quizConfig: missionQuizConfigSchema.nullable().default(null),
     keywordConfig: z
@@ -100,12 +110,6 @@ export const missionFieldsSchema = z
   })
   .strict()
   .superRefine((mission, context) => {
-    if (mission.externalUrl && mission.validationType !== "reviewer")
-      context.addIssue({
-        code: "custom",
-        path: ["externalUrl"],
-        message: "Only reviewer missions may define an external link",
-      })
     if ((mission.validationType === "quiz") !== Boolean(mission.quizConfig))
       context.addIssue({
         code: "custom",

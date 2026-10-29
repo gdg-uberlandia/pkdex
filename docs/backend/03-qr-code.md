@@ -4,36 +4,48 @@ QR Codes são links para páginas internas da aplicação. As leituras exigem co
 
 ## Formato
 
-```text
-/qr/{eventId}/{type}/{qrId}
-```
+Todos os QR Codes usam URLs `/q/{code}` da origem configurada em
+`NEXT_PUBLIC_APP_URL`. Os formatos antigos `/qr/...`, UUIDs isolados e o formato
+compacto anterior de participante não são aceitos. As rotas antigas foram removidas.
 
-Tipos: `user`, `company`, `mission` e `tag`.
+- Participantes: `code` é um identificador aleatório de 128 bits (22 caracteres
+  Base64 URL-safe), resolvido no servidor.
+- Empresas, missões QR e tags: `code` tem um prefixo `c`, `m` ou `t`, seguido dos
+  16 bytes do UUID público codificados em 22 caracteres Base64 URL-safe. São
+  códigos fixos de 23 caracteres, sem expiração ou novos registros no banco.
 
-`qrId` é um UUID v4 público, aleatório e estável, diferente do ID interno do documento do Firestore. A aleatoriedade torna colisões desprezíveis na escala do evento, mas o identificador não é tratado como segredo ou autorização.
+O evento dos códigos fixos é o `EVENT_ID` da implantação. A entidade deve existir
+nesse evento e estar ativa. Missões também devem ter `validationType: "qr"`.
+Missões por revisor, automáticas, palavra-chave e quiz não têm QR próprio.
+O UUID público é aleatório, distinto do ID interno e não representa autorização.
 
-O contrato central em `modules/qr-code/qr-code.contract.ts` define os tipos, constrói URLs e interpreta valores externos. A URL completa aceita no máximo 4.096 caracteres, deve usar `http` ou `https`, possuir a mesma origem de `NEXT_PUBLIC_APP_URL`, não pode conter credenciais ou fragmento e deve corresponder exatamente ao formato documentado. O `eventId` deve ser o `EVENT_ID` da implantação e `qrId` deve ser um UUID válido.
+O contrato em `modules/qr-code/qr-code.contract.ts` constrói e interpreta os links
+fixos. O codec `scripts/lib/static-qr-code.mjs` também é usado pelo gerador de
+imagens. O painel do site mantém o mesmo codec para prévias, downloads e PDFs;
+`NEXT_PUBLIC_APP_URL` permite configurar a origem da Pokédex nesse painel.
+O parser limita o tamanho a 4.096 caracteres, exige a origem oficial e HTTP/HTTPS,
+rejeita credenciais, fragmentos, parâmetros extras, caminhos e codificações inválidas.
 
-QR Codes de empresas, missões com `validationType: "qr"` e tags são fixos e não expiram. Seu
-uso pode ser interrompido desativando a entidade no Firestore. Palestras não
-possuem QR Code; suas avaliações são liberadas manualmente por administradores.
-O QR Code de participante acrescenta um token temporário:
+### Participantes
 
-```text
-/qr/{eventId}/user/{qrId}?token={signedToken}
-```
+O servidor guarda evento, UUID, token assinado e `expiresAt` em
+`userQrReferences` (`test_userQrReferences` em teste), usando o SHA-256 do código
+como ID. Cada emissão cria uma referência e relê o registro para verificar a
+escrita. O modo deve ser explícito e produção exige o projeto
+`devfest-triangulo-2026`. Não é necessária migração ou exclusão de dados existentes.
 
-Para reduzir a densidade do QR Code, o token v3 usa uma representação binária de
-33 bytes: um byte de versão, quatro de emissão, doze de nonce e dezesseis de
-assinatura. O resultado possui 44 caracteres em Base64 URL-safe. A expiração é
-derivada da emissão e da duração fixa de 60 segundos.
+O token interno v3 possui 33 bytes: versão, emissão, nonce e assinatura HMAC de
+128 bits. Ele vincula evento, tipo e UUID ao segredo do servidor. A duração atual
+é um minuto, com cinco segundos de tolerância. Expiração e assinatura são verificadas
+na resolução e novamente pelos serviços de domínio. A interface solicita renovação
+antes da expiração. Uma política TTL em `expiresAt` pode limpar registros expirados,
+mas a validade é conferida mesmo sem essa configuração de infraestrutura.
 
-O servidor calcula HMAC-SHA-256 sobre o payload binário e o contexto formado por
-`eventId`, tipo e `qrId`, usando `QR_SIGNING_SECRET`, e conserva 128 bits da
-assinatura. Assim, os dados já presentes na URL não são repetidos no token, mas
-continuam protegidos contra alteração ou reutilização em outro alvo. Existe
-tolerância máxima de cinco segundos para diferenças de relógio. A interface
-solicita um novo token dez segundos antes da expiração.
+O scanner resolve referências por Server Action autenticada. Uma câmera externa
+abre `/q/{code}`, exige login e apresenta o resultado correspondente à entidade.
+Abrir o código de participante não cria conexão: essa ação depende do scanner.
+A renderização do participante mantém correção M e margem de dois módulos; as
+artes para impressão mantêm margem de quatro módulos.
 
 ## Fluxo
 
@@ -63,7 +75,7 @@ O contrato central verifica:
 - evento configurado na implantação;
 - tipo permitido e UUID válido;
 - ausência de fragmentos e parâmetros inesperados;
-- presença de um único token para participantes.
+- formato da referência curta para participantes.
 
 Depois dessa validação estrutural, o servidor verifica:
 
@@ -82,12 +94,12 @@ autenticada dispara uma Server Action para registrar a visita; a requisição
 XP padrão ou a sobrescrita da empresa e registra o carimbo na mesma transação.
 Reabrir a URL retorna a visita existente sem duplicar pontuação.
 
-Uma leitura válida de tag abre `/qr/{eventId}/tag/{qrId}` e dispara uma Server
+Uma leitura válida de tag abre `/q/{code}` e dispara uma Server
 Action autenticada. A primeira descoberta registra uma conclusão permanente e
 concede o XP padrão ou sobrescrito; releituras não duplicam a recompensa. Nome,
 imagem e descrição são apresentados somente depois da validação do servidor.
 
-Missões com `validationType: "qr"` abrem `/qr/{eventId}/mission/{qrId}`. O servidor confirma
+Missões com `validationType: "qr"` abrem `/q/{code}`. O servidor confirma
 que a missão aceita QR, está ativa, teve seus pré-requisitos cumpridos e ainda
 não foi concluída. Missões presenciais não possuem QR próprio: um reviewer ou
 admin escolhe a missão e usa o scanner em modo de revisão para ler o QR
@@ -102,7 +114,7 @@ A remoção preserva o histórico e revoga de ambos a XP registrada na conexão.
 
 Erros estruturais estáveis incluem `INVALID_QR`, `INVALID_ORIGIN`, `INVALID_EVENT`, `UNSUPPORTED_QR_TYPE` e `MISSING_TOKEN`. Validações temporais acrescentam `QR_EXPIRED`. As fases de domínio acrescentarão erros como `QR_NOT_FOUND`, `QR_ALREADY_SCANNED` e `UNAUTHORIZED` quando suas respectivas operações existirem.
 
-O parser e a assinatura possuem testes automatizados para URLs válidas, quatro tipos de alvo, origem externa, credenciais embutidas, outro evento, tipo desconhecido, UUID inválido, token ausente, parâmetros inesperados, tamanho máximo, assinatura ou payload alterados, expiração e tolerância de relógio.
+O parser e a assinatura possuem testes automatizados para URLs válidas, quatro tipos de alvo, origem externa, credenciais embutidas, outro evento, tipo desconhecido, UUID inválido, formatos antigos, parâmetros inesperados, tamanho máximo, assinatura ou payload alterados, expiração e tolerância de relógio.
 
 ## Material para impressão
 
@@ -129,9 +141,10 @@ pnpm generate-qr-images
 pnpm generate-qr-pdf
 ```
 
-A geração de imagens carrega `.env`; use `pnpm generate-qr-images --local`
-para sobrescrever os valores com `.env.local`, ou `--mobile` para usar
-`.env.mobile`. A pasta `artifacts/qr` é limpa antes de cada geração.
+A geração de imagens carrega somente `.env`; use `pnpm generate-qr-images --local`
+para carregar somente `.env.local`, ou `--mobile` para usar `.env.local` com
+as sobrescritas de `.env.mobile`. `DEVMODE` deve ser explícito no ambiente
+selecionado. Produção usa `.env` e exige o projeto `devfest-triangulo-2026`. A pasta `artifacts/qr` é limpa antes de cada geração.
 
 As URLs são construídas com `EVENT_ID` e `NEXT_PUBLIC_APP_URL` do ambiente
 carregado. Portanto, um PDF gerado com `NEXT_PUBLIC_APP_URL` apontando para

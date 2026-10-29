@@ -71,3 +71,17 @@ releituras preservam operador, horário e XP e que a conta pode sair da aplicaç
 O bloqueio global de missões também impede confirmações por sponsors, inclusive
 com a câmera já aberta. Consulte
 [Bloqueio global de tags e missões](./11-activity-availability.md).
+
+## Links adicionais
+
+Todos os tipos de missão aceitam `externalLinks`, uma lista opcional de até três
+objetos `{ label, url }`. O texto do botão aceita até 60 caracteres e a URL deve
+usar HTTP ou HTTPS. No painel, os links podem ser adicionados, editados e removidos
+independentemente do tipo de validação. A Pokédex os exibe nos detalhes em uma
+linha com três colunas, inclusive em telas pequenas, abrindo cada URL em nova aba.
+Os links não alteram as regras de conclusão da missão.
+
+Missões antigas com `externalUrl` continuam exibindo o botão “Acessar atividade”.
+Ao editar pelo formulário, esse link é carregado na lista e salvo no novo formato.
+Uma lista `externalLinks: []` indica remoção explícita e tem precedência sobre o
+campo antigo. Não é necessária migração de dados.

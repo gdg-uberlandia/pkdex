@@ -4,8 +4,8 @@
  *
  * O comando apenas consulta o Firestore; ele não altera documentos. Os PNGs
  * são salvos em artifacts/qr com nomes como empresa-nome.png,
- * tag-nome.png e missao-nome.png. O arquivo qr-links.json mantém os registros
- * anteriores e acrescenta somente URLs ainda não registradas.
+ * tag-nome.png e missao-nome.png. O arquivo qr-links.json contém as URLs curtas
+ * dos itens ativos desta geração.
  *
  * Para executar com as variáveis de .env.local:
  *   node --env-file=.env.local scripts/generate-event-qr-images-png.mjs
@@ -23,6 +23,7 @@ import sharp from "sharp"
 
 import { EVENT_QR_PRINT_STYLE } from "./lib/event-qr-print-style.mjs"
 import { getFirestoreCollectionName } from "./lib/firestore-admin.mjs"
+import { buildStaticQrPath } from "./lib/static-qr-code.mjs"
 
 const OUTPUT_DIRECTORY = path.resolve("artifacts/qr")
 const LINKS_FILE = path.join(OUTPUT_DIRECTORY, "qr-links.json")
@@ -158,7 +159,7 @@ async function loadGroup({
     .map((item) => {
       const name = String(item[titleField])
       const url = new URL(
-        `/qr/${encodeURIComponent(eventId)}/${routeType}/${encodeURIComponent(item.qrId)}`,
+        buildStaticQrPath(routeType, item.qrId),
         appUrl
       ).toString()
 

@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   ChevronRight,
   CircleDot,
-  ExternalLink,
   LockKeyhole,
   QrCode,
   Sparkles,
@@ -366,6 +365,11 @@ function MissionDialog({
 }: Readonly<{ mission: MissionListItem; trigger: ReactElement }>) {
   const status = statusContent[mission.status]
   const StatusIcon = status.icon
+  const links =
+    mission.externalLinks ??
+    (mission.externalUrl
+      ? [{ label: "Acessar atividade", url: mission.externalUrl }]
+      : [])
 
   return (
     <Dialog>
@@ -431,21 +435,25 @@ function MissionDialog({
             </div>
           </div>
 
-          {mission.validationType === "reviewer" && mission.externalUrl && (
-            <Button
-              className="w-full"
-              render={
-                <a
-                  href={mission.externalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              }
-              nativeButton={false}
-            >
-              <ExternalLink aria-hidden="true" />
-              Acessar atividade
-            </Button>
+          {links.length > 0 && (
+            <div className="grid grid-cols-3 items-stretch gap-2">
+              {links.map((link, index) => (
+                <Button
+                  key={`${index}-${link.url}`}
+                  className="h-auto min-w-0 px-2 py-3 text-center text-xs [overflow-wrap:anywhere] whitespace-normal"
+                  render={
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  }
+                  nativeButton={false}
+                >
+                  {link.label}
+                </Button>
+              ))}
+            </div>
           )}
 
           {mission.status === "failed" && (

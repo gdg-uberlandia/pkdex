@@ -18,6 +18,7 @@ import {
   loadLocalEnvironment,
   requireEnvironment,
 } from "./lib/firestore-admin.mjs"
+import { buildStaticQrPath } from "./lib/static-qr-code.mjs"
 
 await loadLocalEnvironment(".env.local", { override: true })
 assert(isDevMode(), "Requires DEVMODE=true")
@@ -354,15 +355,25 @@ try {
   seedStarted = true
   await seed.commit()
   const qr = await (await get("/api/profile/qr-code")).json()
+  const referenceCode = new URL(qr.value).pathname.match(
+    /^\/q\/([A-Za-z0-9_-]{22})$/
+  )?.[1]
+  assert(referenceCode, "Expected a short participant QR Code")
+  const reference = col("userQrReferences").doc(
+    createHash("sha256").update(referenceCode).digest("hex")
+  )
+  const storedReference = await reference.get()
   assert.equal(
-    new URL(qr.value).pathname,
-    `/qr/${encodeURIComponent(eventId)}/user/${qrIds[0]}`,
+    storedReference.data()?.qrId,
+    qrIds[0],
     "Preview is not reading the seeded test profile"
   )
+  assert.equal(storedReference.data()?.eventId, eventId)
+  refs.push(reference)
   report.remoteSeedVerified = true
-  const companyPath = `/qr/${encodeURIComponent(eventId)}/company/${company.qrId}`
-  const tagPath = `/qr/${encodeURIComponent(eventId)}/tag/${tag.qrId}`
-  const missionPath = `/qr/${encodeURIComponent(eventId)}/mission/${mission.qrId}`
+  const companyPath = buildStaticQrPath("company", company.qrId)
+  const tagPath = buildStaticQrPath("tag", tag.qrId)
+  const missionPath = buildStaticQrPath("mission", mission.qrId)
   for (const [path, action] of [
     [companyPath, "visitCompanyAction"],
     [tagPath, "discoverTagAction"],
