@@ -3,10 +3,9 @@ import "server-only"
 import { createHash } from "node:crypto"
 
 import { FieldValue, Timestamp } from "firebase-admin/firestore"
-import { unstable_cache } from "next/cache"
+import { cache } from "react"
 import * as z from "zod"
 
-import { CACHE_SECONDS, CACHE_TAGS } from "@/config/cache"
 import { firestore } from "@/lib/firebase/admin"
 import { getFirestoreCollectionName } from "@/lib/firebase/firestore-collection"
 import { readActivityAvailability } from "@/modules/event-activities/activity-availability.repository"
@@ -173,17 +172,12 @@ async function loadActiveMissions(eventId: string): Promise<CachedMission[]> {
     }))
 }
 
-const loadCachedActiveMissions = unstable_cache(
-  loadActiveMissions,
-  ["active-missions"],
-  {
-    revalidate: CACHE_SECONDS.EVENT_CATALOG,
-    tags: [CACHE_TAGS.MISSIONS],
-  }
-)
+// The admin is a separate application and cannot invalidate this app's data cache.
+// Deduplicate within a render, but read current mission links on each request.
+const loadCurrentActiveMissions = cache(loadActiveMissions)
 
 export async function findActiveMissions(eventId: string): Promise<Mission[]> {
-  const missions = await loadCachedActiveMissions(eventId)
+  const missions = await loadCurrentActiveMissions(eventId)
 
   return missions.map((mission) => ({
     ...mission,

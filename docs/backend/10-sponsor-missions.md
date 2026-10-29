@@ -85,3 +85,8 @@ Missões antigas com `externalUrl` continuam exibindo o botão “Acessar ativid
 Ao editar pelo formulário, esse link é carregado na lista e salvo no novo formato.
 Uma lista `externalLinks: []` indica remoção explícita e tem precedência sobre o
 campo antigo. Não é necessária migração de dados.
+
+O catálogo de missões é consultado novamente em cada requisição da Pokédex,
+com deduplicação durante a renderização. Ele não usa cache persistente de 15
+minutos, pois as edições são feitas por outro aplicativo. Após editar links no
+painel, recarregue a página de missões para receber os dados atualizados.
