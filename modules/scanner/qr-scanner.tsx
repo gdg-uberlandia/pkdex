@@ -20,7 +20,12 @@ import { Button } from "@/components/ui/button"
 import { SCORES } from "@/config/scores"
 import { reviewMissionAction } from "@/modules/missions/mission.actions"
 import { connectFromScanAction } from "@/modules/networking/connection.actions"
-import { parseQrCodeUrl } from "@/modules/qr-code/qr-code.contract"
+import { resolveQrCodeAction } from "@/modules/qr-code/qr-code.actions"
+import {
+  buildQrCodeUrl,
+  parseQrCodeUrl,
+} from "@/modules/qr-code/qr-code.contract"
+import { parseUserQrReferenceUrl } from "@/modules/qr-code/user-qr-reference.contract"
 
 import {
   classifyCameraError,
@@ -105,18 +110,23 @@ export function QrScanner({ appUrl, eventId, mode }: QrScannerProps) {
       scanSessionRef.current += 1
       setStatus("processing")
 
-      const parsedQrCode = parseQrCodeUrl(value, {
-        appUrl,
-        eventId,
-      })
-
-      if (!parsedQrCode.valid) {
-        showFailure(mapQrCodeError(parsedQrCode))
+      if (!navigator.onLine) {
+        showFailure("offline")
         return
       }
 
-      if (!navigator.onLine) {
-        showFailure("offline")
+      let parsedQrCode
+      try {
+        parsedQrCode = parseUserQrReferenceUrl(value, appUrl)
+          ? await awaitScannerRequest(resolveQrCodeAction(value))
+          : parseQrCodeUrl(value, { appUrl, eventId })
+      } catch {
+        showFailure("validation-failed")
+        return
+      }
+
+      if (!parsedQrCode.valid) {
+        showFailure(mapQrCodeError(parsedQrCode))
         return
       }
 
@@ -131,7 +141,7 @@ export function QrScanner({ appUrl, eventId, mode }: QrScannerProps) {
         }
 
         router.replace(
-          `/qr/${encodeURIComponent(parsedQrCode.target.eventId)}/${parsedQrCode.target.type}/${encodeURIComponent(parsedQrCode.target.qrId)}`
+          new URL(buildQrCodeUrl(parsedQrCode.target, appUrl)).pathname
         )
         return
       }

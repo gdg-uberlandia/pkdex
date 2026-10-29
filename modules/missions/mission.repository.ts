@@ -46,6 +46,7 @@ const missionDocumentSchema = z.object({
   description: missionFieldsSchema.shape.description,
   imageUrl: missionFieldsSchema.shape.imageUrl,
   externalUrl: missionFieldsSchema.shape.externalUrl,
+  externalLinks: missionFieldsSchema.shape.externalLinks,
   validationType: missionFieldsSchema.shape.validationType,
   quizConfig: missionFieldsSchema.shape.quizConfig,
   keywordConfig: missionFieldsSchema.shape.keywordConfig,

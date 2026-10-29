@@ -174,7 +174,12 @@ it("marks pending participant missions blocked while preserving completed missio
       externalUrl: "https://example.com/activity",
       prerequisites: [],
     },
-    { ...mission, id: "done", prerequisites: [] },
+    {
+      ...mission,
+      id: "done",
+      prerequisites: [],
+      externalLinks: [{ label: "Saiba mais", url: "https://example.com/info" }],
+    },
   ])
   mocks.progress.mockResolvedValue({
     completions: [
@@ -193,6 +198,12 @@ it("marks pending participant missions blocked while preserving completed missio
   expect(items.map(({ status }) => status)).toEqual(["blocked", "completed"])
   expect(items[0].externalUrl).toBe("https://example.com/activity")
   expect(items[1].externalUrl).toBeNull()
+  expect(items[0].externalLinks).toEqual([
+    { label: "Acessar atividade", url: "https://example.com/activity" },
+  ])
+  expect(items[1].externalLinks).toEqual([
+    { label: "Saiba mais", url: "https://example.com/info" },
+  ])
   expect(items[0].blockedBy).toContainEqual({
     type: "progress",
     label: "Missões temporariamente bloqueadas pela organização",

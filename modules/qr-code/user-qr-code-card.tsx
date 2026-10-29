@@ -107,7 +107,7 @@ export function UserQrCodeCard({
       )
     }
     updateCountdown()
-    const countdownInterval = window.setInterval(updateCountdown, 60_000)
+    const countdownInterval = window.setInterval(updateCountdown, 1_000)
 
     function scheduleRefresh() {
       const refreshDelay =

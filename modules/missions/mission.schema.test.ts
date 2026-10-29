@@ -107,13 +107,78 @@ describe("reviewer activity links", () => {
     ).toBe(false)
   })
 
-  it("rejects activity links on other mission types", () => {
+  it("accepts legacy links on other mission types", () => {
     expect(
       missionFieldsSchema.safeParse({
         ...reviewer,
         validationType: "qr",
         qrId: "c35d5cf6-a3f4-4ae0-9e6f-0bad73cdded6",
         externalUrl: "https://example.com/activity",
+      }).success
+    ).toBe(true)
+  })
+})
+
+describe("additional mission links", () => {
+  const links = [1, 2, 3].map((n) => ({
+    label: `Botão ${n}`,
+    url: `https://example.com/${n}`,
+  }))
+  const configs = [
+    { validationType: "reviewer", qrId: null },
+    { validationType: "qr", qrId: "c35d5cf6-a3f4-4ae0-9e6f-0bad73cdded6" },
+    {
+      validationType: "automatic",
+      qrId: null,
+      progressRequirement: { type: "connections", target: 2 },
+    },
+    {
+      validationType: "keyword",
+      qrId: null,
+      keywordConfig: { acceptedAnswers: ["answer"], maxAttempts: 3 },
+    },
+    {
+      validationType: "quiz",
+      qrId: null,
+      quizConfig: {
+        questions: [
+          {
+            id: "q1",
+            prompt: "Question",
+            options: ["A", "B"],
+            correctOptionIndex: 0,
+          },
+        ],
+        minCorrectAnswers: 1,
+        maxAttempts: 3,
+      },
+    },
+  ]
+  it.each(configs)(
+    "preserves three labeled links for $validationType missions",
+    (config) => {
+      expect(
+        missionFieldsSchema.parse({
+          ...baseMission,
+          ...config,
+          externalLinks: links,
+        }).externalLinks
+      ).toEqual(links)
+    }
+  )
+  it.each(
+    [
+      [...links, links[0]],
+      [{ label: "", url: "https://example.com" }],
+      [{ label: "Label", url: "javascript:alert(1)" }],
+      [{ label: "Label", url: "" }],
+    ].map((externalLinks) => ({ externalLinks }))
+  )("rejects invalid or excessive links", ({ externalLinks }) => {
+    expect(
+      missionFieldsSchema.safeParse({
+        ...baseMission,
+        ...configs[0],
+        externalLinks,
       }).success
     ).toBe(false)
   })

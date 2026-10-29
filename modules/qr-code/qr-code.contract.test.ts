@@ -1,138 +1,56 @@
 import { describe, expect, it } from "vitest"
 
+import { buildStaticQrPath } from "@/scripts/lib/static-qr-code.mjs"
+
 import {
   buildQrCodeUrl,
   MAX_QR_CODE_URL_LENGTH,
   parseQrCodeUrl,
-  type QrCodeTarget,
 } from "./qr-code.contract"
 
 const APP_URL = "https://pokedex.example.com"
 const EVENT_ID = "devfest-2026"
 const QR_ID = "123e4567-e89b-42d3-a456-426614174000"
-const TOKEN = "payload.signature"
-const config = {
-  appUrl: APP_URL,
-  eventId: EVENT_ID,
-}
+const config = { appUrl: APP_URL, eventId: EVENT_ID }
 
-function buildUserUrl(overrides?: Partial<QrCodeTarget>) {
-  return buildQrCodeUrl(
-    {
-      eventId: EVENT_ID,
-      type: "user",
-      qrId: QR_ID,
-      token: TOKEN,
-      ...overrides,
-    } as QrCodeTarget,
-    APP_URL
-  )
-}
-
-describe("QR Code URL contract", () => {
-  it("builds and parses a participant QR Code", () => {
-    const result = parseQrCodeUrl(buildUserUrl(), config)
-
-    expect(result).toEqual({
-      valid: true,
-      target: {
-        eventId: EVENT_ID,
-        type: "user",
-        qrId: QR_ID,
-        token: TOKEN,
-      },
-    })
-  })
-
+describe("short static QR Code contract", () => {
   it.each(["company", "mission", "tag"] as const)(
-    "builds and parses a static %s QR Code",
+    "round trips a fixed %s QR Code",
     (type) => {
-      const target = {
-        eventId: EVENT_ID,
-        type,
-        qrId: QR_ID,
-      }
-      const result = parseQrCodeUrl(buildQrCodeUrl(target, APP_URL), config)
-
-      expect(result).toEqual({ valid: true, target })
+      const target = { eventId: EVENT_ID, type, qrId: QR_ID }
+      const url = buildQrCodeUrl(target, APP_URL)
+      expect(new URL(url).pathname).toHaveLength(26)
+      expect(parseQrCodeUrl(url, config)).toEqual({ valid: true, target })
+      expect(new URL(url).pathname).toBe(buildStaticQrPath(type, QR_ID))
     }
   )
 
-  it("rejects an external origin", () => {
-    const result = parseQrCodeUrl(
-      `https://attacker.example/qr/${EVENT_ID}/user/${QR_ID}?token=${TOKEN}`,
-      config
-    )
-
-    expect(result).toEqual({ valid: false, code: "INVALID_ORIGIN" })
+  const url = buildQrCodeUrl(
+    { eventId: EVENT_ID, type: "company", qrId: QR_ID },
+    APP_URL
+  )
+  it("uses a stable encoding shared with the image generator", () => {
+    expect(url).toBe(`${APP_URL}/q/cEj5FZ-ibQtOkVkJmFBdAAA`)
   })
-
-  it("rejects embedded URL credentials", () => {
-    const result = parseQrCodeUrl(
-      `https://user:password@pokedex.example.com/qr/${EVENT_ID}/user/${QR_ID}?token=${TOKEN}`,
-      config
-    )
-
-    expect(result).toEqual({ valid: false, code: "INVALID_ORIGIN" })
+  it.each([
+    `${url}?source=external`,
+    `${url}#fragment`,
+    `${url}/`,
+    url.replace(APP_URL, "https://attacker.example"),
+    url.replace("https://", "https://user:password@"),
+    `${APP_URL}/q/xEj5FZ-ibQtOkVkJmFBdAAA`,
+    `${APP_URL}/q/cEj5FZ-ibQtOkVkJmFBdAAB`,
+    `${APP_URL}/q/c${"A".repeat(21)}Q`,
+    `${APP_URL}/qr/${EVENT_ID}/company/${QR_ID}`,
+    `${APP_URL}/qr/${EVENT_ID}/tag/${QR_ID}`,
+    `${APP_URL}/qr/${EVENT_ID}/mission/${QR_ID}`,
+    `${APP_URL}/qr/${EVENT_ID}/user/${QR_ID}?token=old`,
+    `${APP_URL}/q/${"A".repeat(66)}`,
+    `${APP_URL}/${"a".repeat(MAX_QR_CODE_URL_LENGTH)}`,
+  ])("rejects malformed or obsolete URL %s", (value) => {
+    expect(parseQrCodeUrl(value, config).valid).toBe(false)
   })
-
-  it("rejects a QR Code from another event", () => {
-    const result = parseQrCodeUrl(
-      buildUserUrl({ eventId: "another-event" }),
-      config
-    )
-
-    expect(result).toEqual({ valid: false, code: "INVALID_EVENT" })
-  })
-
-  it("rejects an unsupported target type", () => {
-    const result = parseQrCodeUrl(
-      `${APP_URL}/qr/${EVENT_ID}/ticket/${QR_ID}`,
-      config
-    )
-
-    expect(result).toEqual({
-      valid: false,
-      code: "UNSUPPORTED_QR_TYPE",
-    })
-  })
-
-  it("requires a participant token", () => {
-    const result = parseQrCodeUrl(
-      `${APP_URL}/qr/${EVENT_ID}/user/${QR_ID}`,
-      config
-    )
-
-    expect(result).toEqual({ valid: false, code: "MISSING_TOKEN" })
-  })
-
-  it("rejects unexpected query parameters", () => {
-    const result = parseQrCodeUrl(`${buildUserUrl()}&source=external`, config)
-
-    expect(result).toEqual({ valid: false, code: "INVALID_QR" })
-  })
-
-  it("rejects an invalid UUID", () => {
-    const result = parseQrCodeUrl(
-      `${APP_URL}/qr/${EVENT_ID}/company/not-a-uuid`,
-      config
-    )
-
-    expect(result).toEqual({ valid: false, code: "INVALID_QR" })
-  })
-
-  it("rejects fragments", () => {
-    const result = parseQrCodeUrl(`${buildUserUrl()}#fragment`, config)
-
-    expect(result).toEqual({ valid: false, code: "INVALID_ORIGIN" })
-  })
-
-  it("rejects oversized values", () => {
-    const result = parseQrCodeUrl(
-      `https://pokedex.example.com/${"a".repeat(MAX_QR_CODE_URL_LENGTH)}`,
-      config
-    )
-
-    expect(result).toEqual({ valid: false, code: "INVALID_QR" })
+  it("rejects non-string input", () => {
+    expect(parseQrCodeUrl(null, config).valid).toBe(false)
   })
 })
