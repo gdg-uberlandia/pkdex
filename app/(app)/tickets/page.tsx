@@ -5,6 +5,7 @@ import type { Metadata } from "next"
 
 import { TICKET_EXCHANGE_RATE_XP } from "@/config/tickets"
 import { requireAuth } from "@/lib/require-auth"
+import { findActiveRewards } from "@/modules/rewards/reward.repository"
 import { getTicketsForSession } from "@/modules/tickets/ticket.service"
 import { TicketConversionForm } from "@/modules/tickets/ticket-conversion-form"
 import { TicketIntroductionDialog } from "@/modules/tickets/ticket-introduction-dialog"
@@ -18,18 +19,6 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   hour: "2-digit",
   minute: "2-digit",
 })
-
-const rewardTicketReference = [
-  { name: "Doce", tickets: 3 },
-  { name: "Caneta", tickets: 7 },
-  { name: "Bloco de notas", tickets: 8 },
-  { name: "Chaveiro", tickets: 10 },
-  { name: "Copo", tickets: 10 },
-  { name: "Caderno", tickets: 11 },
-  { name: "Garrafa", tickets: 12 },
-  { name: "Kit de bloco + caneta", tickets: 13 },
-  { name: "Camiseta", tickets: 20 },
-] as const
 
 export default async function TicketsPage() {
   const session = await requireAuth()
@@ -51,6 +40,7 @@ export default async function TicketsPage() {
     )
   }
 
+  const rewards = await findActiveRewards(tickets.eventId)
   const conversionIdempotencyKey = randomUUID()
 
   return (
@@ -112,15 +102,21 @@ export default async function TicketsPage() {
             lojinha. Os resgates dependem da disponibilidade dos brindes.
           </p>
         </div>
+        {rewards.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            Nenhum brinde está disponível no momento.
+          </p>
+        )}
         <dl className="divide-y divide-border">
-          {rewardTicketReference.map((reward) => (
+          {rewards.map((reward) => (
             <div
-              key={reward.name}
+              key={reward.id}
               className="flex items-center justify-between gap-4 py-2.5 text-sm"
             >
               <dt>{reward.name}</dt>
               <dd className="shrink-0 font-semibold text-gamification tabular-nums">
-                {reward.tickets} tickets
+                {reward.ticketCost}{" "}
+                {reward.ticketCost === 1 ? "ticket" : "tickets"}
               </dd>
             </div>
           ))}
