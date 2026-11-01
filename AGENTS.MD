@@ -104,7 +104,7 @@ scan → conexão automática → concessão de XP
 ### XP, ranking e tickets
 
 - XP não é moeda e não pode ser gasto;
-- níveis usam as dez faixas fixas de `config/levels.ts`;
+- níveis usam até dez faixas dinâmicas de `config/levels.ts`, com custos crescentes, normalizadas pelo orçamento de XP das atividades disponíveis do evento (sem conexões);
 - o nível é calculado a partir do XP e não persistido separadamente;
 - número e título aparecem juntos, como `Nível 5 · Guardião dos Logs`;
 - o ranking é geral e ordenado por XP;

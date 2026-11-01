@@ -9,6 +9,7 @@ import * as z from "zod"
 import { CACHE_SECONDS, CACHE_TAGS } from "@/config/cache"
 import { firestore } from "@/lib/firebase/admin"
 import { getFirestoreCollectionName } from "@/lib/firebase/firestore-collection"
+import { readActivityAvailability } from "@/modules/event-activities/activity-availability.repository"
 import { accessRolesSchema } from "@/modules/profile/profile.schema"
 
 import { type Speaker, speakerFieldsSchema } from "./speaker.schema"
@@ -335,6 +336,13 @@ export async function completeTalkRating({
           ratingSnapshot.data()
         ),
       }
+    }
+
+    if (
+      (await readActivityAvailability(transaction, validatedEventId))
+        .eventClosed
+    ) {
+      return { status: "closed" }
     }
 
     if (!talk.isActive) {

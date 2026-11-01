@@ -44,6 +44,7 @@ export async function connectFromScanAction(
       PROFILE_NOT_FOUND: "O perfil deste participante não está disponível.",
       QR_EXPIRED:
         "Este QR Code expirou. Peça ao participante para atualizá-lo.",
+      EVENT_CLOSED: "O evento foi encerrado. Novas conexões estão bloqueadas.",
       SCAN_COOLDOWN:
         "Aguarde um minuto antes de se conectar novamente com esta pessoa.",
       SELF_CONNECTION: "Você não pode se conectar com o próprio perfil.",

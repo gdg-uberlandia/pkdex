@@ -2,6 +2,7 @@ import * as z from "zod"
 
 export const activityServiceSchema = z.enum(["tags", "missions"])
 export const activityAvailabilitySchema = z.object({
+  eventClosed: z.boolean().default(false),
   tagsEnabled: z.boolean().default(true),
   missionsEnabled: z.boolean().default(true),
 })

@@ -158,8 +158,8 @@ resumo ativam a aba relacionada e navegam até a seção de coleções; a seleç
 permanece no parâmetro `collection` após refresh. A rolagem usa transição suave
 quando o dispositivo não solicita redução de movimento.
 
-`/ranking` apresenta o nível, XP, progresso total até os 4.000 XP do nível
-máximo e posição do participante. O indicador funciona como um termômetro da
+`/ranking` apresenta o nível, XP, progresso total até o teto dinâmico de XP do
+evento (catálogo ativo, sem conexões) e posição do participante. O indicador funciona como um termômetro da
 jornada completa, acompanhado pelos valores atual e máximo. Quem
 está no Top 3 vê as dez primeiras posições; os demais veem o Top 3 e uma
 janela contextual com até três posições acima e três abaixo da própria

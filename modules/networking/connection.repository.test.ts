@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => {
   const create = vi.fn()
   const get = vi
     .fn()
-    .mockResolvedValue({ exists: false, data: () => ({ interests: [] }) })
+    .mockResolvedValue({ exists: false, data: () => undefined })
   const set = vi.fn()
   const update = vi.fn()
   const increment = vi.fn((amount: number) => ({ increment: amount }))
@@ -46,12 +46,12 @@ describe("connection repository", () => {
     vi.clearAllMocks()
     mocks.get.mockResolvedValue({
       exists: false,
-      data: () => ({ interests: [] }),
+      data: () => undefined,
     })
   })
   it("records the intersection of both profiles when creating a connection", async () => {
     mocks.get
-      .mockResolvedValueOnce({ exists: false, data: () => ({ interests: [] }) })
+      .mockResolvedValueOnce({ exists: false, data: () => undefined })
       .mockResolvedValueOnce({
         exists: true,
         data: () => ({ interests: ["ai", "cloud"] }),
@@ -108,7 +108,7 @@ describe("connection repository", () => {
     })
 
     expect(result).toBe("connected")
-    expect(mocks.get).toHaveBeenCalledTimes(3)
+    expect(mocks.get).toHaveBeenCalledTimes(4)
     expect(mocks.create).toHaveBeenCalledTimes(1)
     expect(mocks.increment).toHaveBeenNthCalledWith(1, 5)
     expect(mocks.increment).toHaveBeenNthCalledWith(2, 5)
@@ -125,4 +125,26 @@ describe("connection repository", () => {
       expect.objectContaining({ xp: { increment: 5 } })
     )
   })
+})
+
+it("closure blocks a new connection without changing XP, counters or history", async () => {
+  vi.clearAllMocks()
+  mocks.get.mockImplementation(async (ref: { collection: string }) => ({
+    exists: ref.collection === "eventOperations",
+    data: () =>
+      ref.collection === "eventOperations"
+        ? { eventId: "event-1", eventClosed: true }
+        : undefined,
+  }))
+  expect(
+    await requestConnection({
+      eventId: "event-1",
+      requesterId: "a",
+      recipientId: "b",
+      xpAwardedPerParticipant: 5,
+    })
+  ).toBe("event-closed")
+  expect(mocks.create).not.toHaveBeenCalled()
+  expect(mocks.update).not.toHaveBeenCalled()
+  expect(mocks.set).not.toHaveBeenCalled()
 })

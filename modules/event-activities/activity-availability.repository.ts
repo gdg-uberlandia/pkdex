@@ -25,7 +25,10 @@ function parseAvailability(
 ) {
   if (data && data.eventId !== eventId)
     throw new Error("Stored event operations identity is invalid")
-  return activityAvailabilitySchema.parse(data ?? {})
+  const availability = activityAvailabilitySchema.parse(data ?? {})
+  return availability.eventClosed
+    ? { ...availability, tagsEnabled: false, missionsEnabled: false }
+    : availability
 }
 export async function findActivityAvailability(eventId: string) {
   const snapshot = await availabilityRef(eventId).get()
@@ -69,7 +72,7 @@ export async function setActivityAvailability(
       profile.data.accessRoles[0] !== "admin"
     )
       return false
-    parseAvailability(eventId, operations.data())
+    if (parseAvailability(eventId, operations.data()).eventClosed) return false
     transaction.set(
       reference,
       {
