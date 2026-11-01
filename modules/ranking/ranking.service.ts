@@ -6,10 +6,11 @@ import {
   formatLevelLabel,
   getLevelForXp,
   getNextLevel,
-  MAX_LEVEL_XP,
+  type Level,
 } from "@/config/levels"
 import { hasPermission } from "@/modules/profile/profile.authorization"
 import { requireProfileForSession } from "@/modules/profile/profile.service"
+import { findEventProgression } from "@/modules/progression/event-progression.repository"
 
 import {
   findRankingWindow,
@@ -43,9 +44,10 @@ export type Ranking =
 
 function toRankingEntry(
   profile: PositionedRankingProfile,
-  currentParticipantId: string
+  currentParticipantId: string,
+  levels: readonly Level[]
 ): RankingEntry {
-  const level = getLevelForXp(profile.xp)
+  const level = getLevelForXp(profile.xp, levels)
 
   return {
     userId: profile.userId,
@@ -69,6 +71,7 @@ export async function getRankingForSession(session: Session): Promise<Ranking> {
     return { available: false }
   }
 
+  const progression = await findEventProgression(profile.eventId)
   const window = await findRankingWindow(profile.eventId, {
     userId: profile.userId,
     displayName: profile.displayName,
@@ -81,25 +84,29 @@ export async function getRankingForSession(session: Session): Promise<Ranking> {
     return { available: false }
   }
 
-  const level = getLevelForXp(window.current.xp)
-  const nextLevel = getNextLevel(level)
+  const level = getLevelForXp(window.current.xp, progression.levels)
+  const nextLevel = getNextLevel(level, progression.levels)
   const journeyProgress = Math.min(
     100,
-    Math.max(0, (window.current.xp / MAX_LEVEL_XP) * 100)
+    Math.max(0, (window.current.xp / progression.maximumXp) * 100)
   )
 
   return {
     available: true,
     current: {
-      ...toRankingEntry(window.current, profile.userId),
+      ...toRankingEntry(window.current, profile.userId, progression.levels),
       journeyProgress,
-      maximumLevelXp: MAX_LEVEL_XP,
+      maximumLevelXp: progression.maximumXp,
       nextLevelLabel: nextLevel ? formatLevelLabel(nextLevel) : null,
       xpUntilNextLevel: nextLevel
         ? Math.max(0, nextLevel.minimumXp - window.current.xp)
         : 0,
     },
-    top: window.top.map((entry) => toRankingEntry(entry, profile.userId)),
-    nearby: window.nearby.map((entry) => toRankingEntry(entry, profile.userId)),
+    top: window.top.map((entry) =>
+      toRankingEntry(entry, profile.userId, progression.levels)
+    ),
+    nearby: window.nearby.map((entry) =>
+      toRankingEntry(entry, profile.userId, progression.levels)
+    ),
   }
 }

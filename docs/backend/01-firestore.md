@@ -253,9 +253,12 @@ que precisam de IDs, datas ou conteúdo completo.
 
 As dez faixas ficam centralizadas em `config/levels.ts`. O nível é derivado do
 XP atual e não é persistido no perfil. A interface sempre combina número e
-título, de `Nível 1 · Newbie` até `Nível 10 · Mestre do Endgame`. O último
-nível começa em 4.000 XP; valores superiores continuam válidos para diferenciar
-participantes no ranking.
+título, de `Nível 1 · Newbie` até `Nível 10 · Mestre do Endgame`. Os limites
+são calculados a partir do orçamento de XP do catálogo ativo do evento, sem
+conexões. Cada avanço exige mais XP que o anterior; o último nível coincide com
+esse orçamento. XP adicional de conexões (5 por nova conexão) continua válido
+para diferenciar participantes no ranking. Consulte
+[Progressão dinâmica](../project/11-dynamic-event-progression.md).
 
 O ranking consulta somente perfis concluídos do evento com `accessRoles`
 contendo `participant`. A ordem usa `xp` decrescente, `xpReachedAt` crescente e

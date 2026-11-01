@@ -25,7 +25,7 @@ import Link from "next/link"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { buttonVariants } from "@/components/ui/button"
-import { formatLevelLabel, getLevelForXp, MAX_LEVEL_XP } from "@/config/levels"
+import { formatLevelLabel, getLevelForXp, type Level } from "@/config/levels"
 import { IS_HALLOWEEN } from "@/config/seasonal-theme"
 import { requireAuth } from "@/lib/require-auth"
 import { cn } from "@/lib/utils"
@@ -42,6 +42,7 @@ import { ParticipantSummaryCard } from "@/modules/participant-summary/participan
 import { hasPermission } from "@/modules/profile/profile.authorization"
 import { requireProfileForSession } from "@/modules/profile/profile.service"
 import type { Profile } from "@/modules/profile/profile.types"
+import { findEventProgression } from "@/modules/progression/event-progression.repository"
 import halloweenStyles from "@/modules/seasonal-theme/halloween.module.css"
 import {
   SeasonalCardDecoration,
@@ -101,12 +102,16 @@ function getInitials(displayName: string) {
     .toUpperCase()
 }
 
-function calculateLevelProgress(xp: number) {
-  const level = getLevelForXp(xp)
+function calculateLevelProgress(
+  xp: number,
+  maximumXp: number,
+  levels: readonly Level[]
+) {
+  const level = getLevelForXp(xp, levels)
 
   return {
     level,
-    percentage: Math.min(100, Math.max(0, (xp / MAX_LEVEL_XP) * 100)),
+    percentage: Math.min(100, Math.max(0, (xp / maximumXp) * 100)),
   }
 }
 
@@ -122,12 +127,18 @@ export default async function HomePage() {
     return <OrganizationHome profile={profile} operations={operations} />
   }
 
-  const [summary, catalogTotals, conversionEnabled] = await Promise.all([
-    findOrInitializeParticipantSummary(profile.eventId, profile.userId),
-    getHomeCatalogTotals(profile.eventId),
-    isTicketConversionEnabled(profile.eventId),
-  ])
-  const levelProgress = calculateLevelProgress(profile.xp)
+  const [summary, catalogTotals, conversionEnabled, progression] =
+    await Promise.all([
+      findOrInitializeParticipantSummary(profile.eventId, profile.userId),
+      getHomeCatalogTotals(profile.eventId),
+      isTicketConversionEnabled(profile.eventId),
+      findEventProgression(profile.eventId),
+    ])
+  const levelProgress = calculateLevelProgress(
+    profile.xp,
+    progression.maximumXp,
+    progression.levels
+  )
   const passport = calculatePassportProgress(summary, catalogTotals)
   const objective = selectHomeObjective(summary, catalogTotals)
 
@@ -179,7 +190,7 @@ export default async function HomePage() {
             </p>
             <p className="shrink-0 text-muted-foreground tabular-nums">
               {profile.xp.toLocaleString("pt-BR")} /{" "}
-              {MAX_LEVEL_XP.toLocaleString("pt-BR")} XP
+              {progression.maximumXp.toLocaleString("pt-BR")} XP
             </p>
           </div>
           <ProgressTrack
