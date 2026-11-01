@@ -53,7 +53,13 @@ export function ActivityAvailabilityControls({
                 {label} {enabled ? "liberadas" : "bloqueadas"}
               </p>
             </div>
-            <ActivityAvailabilityToggle service={service} enabled={enabled} />
+            {availability.eventClosed ? (
+              <span className="text-sm text-muted-foreground">
+                Evento encerrado
+              </span>
+            ) : (
+              <ActivityAvailabilityToggle service={service} enabled={enabled} />
+            )}
           </div>
         ))}
       </div>

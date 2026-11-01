@@ -94,6 +94,8 @@ export async function createConnectionRequestForSession(
       return { success: true, code: "CONNECTION_CREATED" }
     case "already-connected":
       return { success: true, code: "ALREADY_CONNECTED" }
+    case "event-closed":
+      return { success: false, code: "EVENT_CLOSED" }
     case "cooldown":
       return { success: false, code: "SCAN_COOLDOWN" }
   }

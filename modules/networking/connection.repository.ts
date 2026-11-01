@@ -7,6 +7,7 @@ import * as z from "zod"
 
 import { firestore } from "@/lib/firebase/admin"
 import { getFirestoreCollectionName } from "@/lib/firebase/firestore-collection"
+import { readActivityAvailability } from "@/modules/event-activities/activity-availability.repository"
 import { incrementParticipantSummary } from "@/modules/participant-summary/participant-summary.repository"
 import {
   getProfileInterests,
@@ -49,7 +50,8 @@ const connectionDocumentSchema = connectionFieldsSchema
     updatedAt: z.instanceof(Timestamp),
   })
 
-type RequestConnectionResult = "connected" | "already-connected" | "cooldown"
+type RequestConnectionResult =
+  "connected" | "already-connected" | "cooldown" | "event-closed"
 
 type RemoveConnectionResult =
   | "removed"
@@ -121,9 +123,11 @@ export async function requestConnection({
       getProfileInterests(requesterSnapshot.data() ?? {}),
       getProfileInterests(recipientSnapshot.data() ?? {})
     )
+    const availability = await readActivityAvailability(transaction, eventId)
     const now = Timestamp.now()
 
     if (!snapshot.exists) {
+      if (availability.eventClosed) return "event-closed"
       transaction.create(connectionRef, {
         eventId,
         participantIds,
@@ -158,6 +162,8 @@ export async function requestConnection({
       if (connection.status === "accepted") {
         return "already-connected"
       }
+
+      if (availability.eventClosed) return "event-closed"
 
       if (
         now.toMillis() - connection.lastRequestedAt.getTime() <

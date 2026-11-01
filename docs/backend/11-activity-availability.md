@@ -47,3 +47,22 @@ tentativas, XP, retomada de missões automáticas e manutenção de conquistas.
 
 No celular, conferir os controles no perfil admin e testar uma leitura com a
 câmera aberta durante a mudança de estado por outro dispositivo.
+
+## Encerramento do evento
+
+O painel administrativo do site oferece “Encerrar evento”, com confirmação.
+Ele grava `eventClosed: true`, `eventClosedAt` e `eventClosedBy` no mesmo documento,
+por merge, preservando configurações anteriores. A operação é idempotente e não
+oferece reabertura. Campo ausente significa evento aberto.
+
+O encerramento prevalece sobre `tagsEnabled` e `missionsEnabled`; controles
+individuais não podem liberar atividades depois dele. Missões (incluindo
+conclusões automáticas), tags, avaliações e conexões consultam o documento dentro
+da transação que concede a realização e o XP. Transações concorrentes ao
+encerramento são revalidadas pelo Firestore. Realizações e avaliações existentes
+continuam idempotentes; histórico, XP e tickets não são recalculados ou apagados.
+Visitas a empresas, consultas, resgates e sorteios mantêm suas regras próprias.
+
+A aplicação exibe um aviso global aos usuários. Publicar o site e a Pokédex com
+este suporte antes de usar o controle em produção; a interface administrativa
+sozinha não instala os bloqueios no servidor da Pokédex.

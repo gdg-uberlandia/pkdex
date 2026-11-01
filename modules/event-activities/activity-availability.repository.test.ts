@@ -52,6 +52,7 @@ beforeEach(() => {
 })
 it("defaults both services to enabled for existing and new events", async () => {
   expect(await findActivityAvailability("event")).toEqual({
+    eventClosed: false,
     tagsEnabled: true,
     missionsEnabled: true,
   })
@@ -60,6 +61,7 @@ it("defaults both services to enabled for existing and new events", async () => 
     ticketConversionEnabled: false,
   })
   expect(await findActivityAvailability("event")).toEqual({
+    eventClosed: false,
     tagsEnabled: true,
     missionsEnabled: true,
   })
@@ -75,6 +77,7 @@ it("updates each service independently and preserves ticket and raffle settings"
     true
   )
   expect(await findActivityAvailability("event")).toEqual({
+    eventClosed: false,
     tagsEnabled: false,
     missionsEnabled: true,
   })
@@ -132,4 +135,21 @@ it("does not accept malformed form values as a request to block services", () =>
 it("rejects a corrupted event identity", async () => {
   mock.documents.set("eventOperations/event", { eventId: "other" })
   await expect(findActivityAvailability("event")).rejects.toThrow("identity")
+})
+
+it("global closure overrides service flags and cannot be bypassed by toggles", async () => {
+  mock.documents.set("eventOperations/event", {
+    eventId: "event",
+    eventClosed: true,
+    tagsEnabled: true,
+    missionsEnabled: true,
+  })
+  expect(await findActivityAvailability("event")).toEqual({
+    eventClosed: true,
+    tagsEnabled: false,
+    missionsEnabled: false,
+  })
+  expect(await setActivityAvailability("event", "tags", true, "admin")).toBe(
+    false
+  )
 })

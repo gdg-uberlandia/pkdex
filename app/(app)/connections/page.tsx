@@ -108,6 +108,7 @@ function ScanResultFeedback({ result }: Readonly<{ result: string | null }>) {
     INVALID_QR: "Não foi possível validar este QR Code.",
     PROFILE_NOT_FOUND: "O perfil deste participante não está disponível.",
     QR_EXPIRED: "Este QR Code expirou. Peça um código atualizado.",
+    EVENT_CLOSED: "O evento foi encerrado. Novas conexões estão bloqueadas.",
     SCAN_COOLDOWN: "Aguarde um minuto antes de tentar novamente.",
     SELF_CONNECTION: "Você não pode se conectar com o próprio perfil.",
   }
